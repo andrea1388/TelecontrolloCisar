@@ -71,11 +71,24 @@ namespace telecontrollo
 
 
         }
-        void leggiingressi(out bool tonodisponibile, out bool squillotelefono, out byte tono) 
+        void leggiingressi(out bool tonodisponibile, out bool squillotelefono, out TonoDtmf tono) 
         {
             tonodisponibile=false;
-            squillotelefono=false ;
+            squillotelefono=false;
+            tono="0";
 
+        }
+        void AgganciaLineaTelefonica()
+        {
+            
+        }
+        void SganciaLineaTelefonica()
+        {
+            
+        }
+        void ElaboraSequenzaToniRicevuti(BufferCircolare buffer)
+        {
+            
         }
         static void log(String msg)
         {
