@@ -8,8 +8,7 @@ namespace telecontrollo
     class BufferCircolare
     {
         byte lunghezzabuffer,lunghezzacodice;
-        private int p1;
-        private int p2;
+        private byte  primo=0, ultimo=0;
         byte[] array;
         public BufferCircolare(byte lunghezzabuffer, byte lunghezzacodice)
         {
@@ -22,11 +21,27 @@ namespace telecontrollo
        
         public void Inserisci(byte tono)
         {
-            
+            array[ultimo++] = tono;
+            if (ultimo >= lunghezzabuffer)
+            {
+                ultimo = 0;
+            }
+            if (ultimo == primo)
+            {
+                primo++;
+                if (primo >= lunghezzabuffer) primo = 0;
+            }
         }
-        String EstraiUltimiDati(byte quantita)
+        byte[] EstraiUltimiDati(byte quantita)
         {
-
+            byte[] valori = new byte[quantita];
+            byte index=quantita-1,ptr = ultimo ;
+            valori[index] = array[ptr];
+            index--;
+            ptr--;
+            if (ptr < 0) ptr = lunghezzabuffer - 1;
+            if (index == 0) return valori;
+            
         }
 
 

@@ -8,7 +8,7 @@ namespace telecontrollo
 {
     class Program
     {
-        static void Main(string[] args)
+        void Main(string[] args)
         {
             try
             {
@@ -21,23 +21,23 @@ namespace telecontrollo
             }
 
         }
-        static void mainloop()
+         void mainloop()
         {
             BufferCircolare buffer=new BufferCircolare(1,1);
             bool tonodisponibile, squillotelefono;
-            TonoDtmf tono;
+            TonoDtmf tono=new TonoDtmf ();
             int intervallopolling=10; // tempo tra un polling degli ingressi e il successivo in ms
-            int duratasquillo; // durata squillo in ms
+            int duratasquillo=0; // durata squillo in ms
             int tempominimoduratasquillo=250; // tempo minimo durata dello squillo prima di considerarlo valido, in ms
             bool lineaconnessa = false; // indica se la linea è agganciata
             int tempomassimochiamata=30000; // tempo max durata telefonata
-            Stopwatch tempochiamata;
+            Stopwatch tempochiamata=new Stopwatch();
             while (true)
             {
                 leggiingressi(out tonodisponibile, out squillotelefono, out tono);
                 if (tonodisponibile)
                 {
-                    buffer.Inserisci(tono);
+                    buffer.Inserisci(tono.Valore);
                     log("ricevuto tono " + tono);
                     ElaboraSequenzaToniRicevuti(buffer);
 
@@ -71,11 +71,12 @@ namespace telecontrollo
 
 
         }
-        void leggiingressi(out bool tonodisponibile, out bool squillotelefono, out TonoDtmf tono) 
+         void leggiingressi(out bool tonodisponibile, out bool squillotelefono, out TonoDtmf tono) 
         {
+            tono=new TonoDtmf(1);
             tonodisponibile=false;
             squillotelefono=false;
-            tono="0";
+           
 
         }
         void AgganciaLineaTelefonica()

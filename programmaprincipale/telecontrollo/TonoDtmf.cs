@@ -8,10 +8,19 @@ namespace telecontrollo
     
     class TonoDtmf
     {
-        byte tono;
+        private byte tono;
         public TonoDtmf(byte tono) 
         {
             this.tono=tono;
+        }
+        public TonoDtmf()
+        {
+            this.tono = 0;
+        }
+        public byte Valore
+        {
+            get {return tono;}
+            set {tono = value;}
         }
         public string ToString() 
         {
