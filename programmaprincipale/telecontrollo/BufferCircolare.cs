@@ -7,40 +7,44 @@ namespace telecontrollo
 {
     class BufferCircolare
     {
-        byte lunghezzabuffer,lunghezzacodice;
+        byte lunghezzabuffer;
         private byte  primo=0, ultimo=0;
         byte[] array;
-        public BufferCircolare(byte lunghezzabuffer, byte lunghezzacodice)
+        public BufferCircolare(byte lunghezzabuffer)
         {
             this.lunghezzabuffer = lunghezzabuffer;
-            this.lunghezzacodice = lunghezzacodice;
-            if (lunghezzacodice > lunghezzabuffer) throw new Exception("Buffer insufficiente");
             array=new byte[lunghezzabuffer];
+            for (int i = 0; i < lunghezzabuffer; i++) array[i] = 0xFF;
         }
 
        
         public void Inserisci(byte tono)
         {
             array[ultimo++] = tono;
-            if (ultimo >= lunghezzabuffer)
-            {
-                ultimo = 0;
-            }
             if (ultimo == primo)
             {
                 primo++;
                 if (primo >= lunghezzabuffer) primo = 0;
             }
+            if (ultimo >= lunghezzabuffer)
+            {
+                ultimo = 0;
+            }
         }
-        byte[] EstraiUltimiDati(byte quantita)
+        public byte[] EstraiUltimiDati(byte quantita)
         {
             byte[] valori = new byte[quantita];
-            byte index=quantita-1,ptr = ultimo ;
-            valori[index] = array[ptr];
-            index--;
-            ptr--;
-            if (ptr < 0) ptr = lunghezzabuffer - 1;
-            if (index == 0) return valori;
+            short  index=(short)(quantita - 1);
+            short ptr = (short)(ultimo - 1);
+            while(true )
+            {
+                if (ptr < 0) ptr = (byte)(lunghezzabuffer - 1);
+                valori[index] = array[ptr];
+                index--;
+                ptr--;
+                if (index ==-1) return valori;
+
+            }
             
         }
 

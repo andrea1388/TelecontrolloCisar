@@ -8,37 +8,43 @@ namespace telecontrollo
 {
     class Program
     {
-        void Main(string[] args)
+        static void Main(string[] args)
         {
-            try
+            main m = new main(); 
+            //try
             {
-                mainloop();
+                m.mainloop();
             }
-            catch (Exception e)
+            //catch (Exception e)
             {
 
-                log("Errore " + e.Message );
+                //log("Errore " + e.Message );
             }
 
         }
-         void mainloop()
+       
+    class main
+    {
+        BufferCircolare buffer = new BufferCircolare(10);
+
+        public void mainloop()
         {
-            BufferCircolare buffer=new BufferCircolare(1,1);
+
             bool tonodisponibile, squillotelefono;
-            TonoDtmf tono=new TonoDtmf ();
-            int intervallopolling=10; // tempo tra un polling degli ingressi e il successivo in ms
-            int duratasquillo=0; // durata squillo in ms
-            int tempominimoduratasquillo=250; // tempo minimo durata dello squillo prima di considerarlo valido, in ms
+            TonoDtmf tono = new TonoDtmf();
+            int intervallopolling = 10; // tempo tra un polling degli ingressi e il successivo in ms
+            int duratasquillo = 0; // durata squillo in ms
+            int tempominimoduratasquillo = 250; // tempo minimo durata dello squillo prima di considerarlo valido, in ms
             bool lineaconnessa = false; // indica se la linea è agganciata
-            int tempomassimochiamata=30000; // tempo max durata telefonata
-            Stopwatch tempochiamata=new Stopwatch();
+            int tempomassimochiamata = 30000; // tempo max durata telefonata
+            Stopwatch tempochiamata = new Stopwatch();
             while (true)
             {
                 leggiingressi(out tonodisponibile, out squillotelefono, out tono);
                 if (tonodisponibile)
                 {
                     buffer.Inserisci(tono.Valore);
-                    log("ricevuto tono " + tono);
+                    log("ricevuto tono: " + tono.Valore);
                     ElaboraSequenzaToniRicevuti(buffer);
 
 
@@ -58,7 +64,7 @@ namespace telecontrollo
                 }
                 if (lineaconnessa)
                 {
-                    if (tempochiamata.ElapsedMilliseconds  > tempomassimochiamata)
+                    if (tempochiamata.ElapsedMilliseconds > tempomassimochiamata)
                     {
                         SganciaLineaTelefonica();
                         tempochiamata.Reset();
@@ -71,29 +77,36 @@ namespace telecontrollo
 
 
         }
-         void leggiingressi(out bool tonodisponibile, out bool squillotelefono, out TonoDtmf tono) 
+        void leggiingressi(out bool tonodisponibile, out bool squillotelefono, out TonoDtmf tono)
         {
-            tono=new TonoDtmf(1);
-            tonodisponibile=false;
-            squillotelefono=false;
-           
+            Random rnd = new Random();
+            tono = new TonoDtmf((byte)rnd.Next(16) );
+            tonodisponibile = true;
+            squillotelefono = false;
+
 
         }
         void AgganciaLineaTelefonica()
         {
-            
+
         }
         void SganciaLineaTelefonica()
         {
-            
+
         }
         void ElaboraSequenzaToniRicevuti(BufferCircolare buffer)
         {
-            
+            byte[] array = buffer.EstraiUltimiDati(5);
+            String s="";
+            for (int i = 0; i < 5; i++) s =s+ array[i].ToString() + " ";
+
+                log(s); 
+
         }
         static void log(String msg)
         {
             Console.WriteLine(msg);
         }
+    }
     }
 }
