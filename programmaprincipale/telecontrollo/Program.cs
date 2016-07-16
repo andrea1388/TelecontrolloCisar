@@ -29,14 +29,17 @@ namespace telecontrollo
 
         public void mainloop()
         {
-
+            IniParser parser = new IniParser("telecontrollo.conf");
             bool tonodisponibile, squillotelefono;
             TonoDtmf tono = new TonoDtmf();
-            int intervallopolling = 10; // tempo tra un polling degli ingressi e il successivo in ms
+            int intervallopolling; // tempo tra un polling degli ingressi e il successivo in ms
             int duratasquillo = 0; // durata squillo in ms
             int tempominimoduratasquillo = 250; // tempo minimo durata dello squillo prima di considerarlo valido, in ms
             bool lineaconnessa = false; // indica se la linea è agganciata
             int tempomassimochiamata = 30000; // tempo max durata telefonata
+            String tmp;
+            if(!int.TryParse(parser.GetSetting("ROOT", "intervallopolling"),out intervallopolling)) intervallopolling=10;
+            
             Stopwatch tempochiamata = new Stopwatch();
             while (true)
             {
