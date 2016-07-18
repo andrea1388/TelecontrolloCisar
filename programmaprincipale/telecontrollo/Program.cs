@@ -3,6 +3,12 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
 using System.Threading;
+/*
+    Attende comandi dtmf
+    Formato comando
+    <codice di sblocco><comando: 0 | 1><linea da 00 a 99 sempre su due cifre>
+    0 spegne 1 accende
+*/
 
 namespace telecontrollo
 {
@@ -41,6 +47,7 @@ namespace telecontrollo
             int tempominimoduratasquillo = 250; // tempo minimo durata dello squillo prima di considerarlo valido, in ms
             bool lineaconnessa = false; // indica se la linea è agganciata
             int tempomassimochiamata = 30000; // tempo max durata telefonata
+            int tempomassimoduratacomandodtmf = 15000; // tempo max entro il quale completare il comandoi dtmf
 
             if(!int.TryParse(parser.GetSetting("ROOT", "intervallopolling"),out intervallopolling)) intervallopolling=10;
             String tmp= parser.GetSetting("ROOT", "codicedtmf");
@@ -49,14 +56,14 @@ namespace telecontrollo
             log("codicedtmf=" + codicedtmf.ToString() );
             log("intervallopolling=" + intervallopolling);
             Stopwatch tempochiamata = new Stopwatch();
+            Stopwatch duratacomandodtmf = new Stopwatch();
             while (true)
             {
                 leggiingressi(out tonodisponibile, out squillotelefono, out tono);
                 if (tonodisponibile)
                 {
-                    buffer.Inserisci(tono.Valore);
                     log("ricevuto tono: " + tono.Valore);
-                    ElaboraSequenzaToniRicevuti();
+                    ElaboraSequenzaToniRicevuti(tono);
 
 
                 }
@@ -105,12 +112,32 @@ namespace telecontrollo
         {
 
         }
-        void ElaboraSequenzaToniRicevuti()
+        void ElaboraSequenzaToniRicevuti(TonoDtmf tono)
         {
-            byte[] array = buffer.EstraiUltimiDati((byte) codicedtmf.Length);
-            if ( codicedtmf.Confronta(array))
+            if (duratacomandodtmf.ElapsedMilliseconds > tempomassimoduratacomandodtmf) stato=0;
+            switch (stato)
             {
-                log("match");
+                case 0: // codice iniziale non ricevuto
+                    buffer.Inserisci(tono.Valore);
+                    byte[] array = buffer.EstraiUltimiDati((byte) codicedtmf.Length);
+                    if ( codicedtmf.Confronta(array)) log("match");
+                    stato=1;
+                    duratacomandodtmf.Start();
+                    break;
+                stato 1: // codice di sblocco ricevuto. Attendo comando
+                    comando=tono;
+                    stato=2;
+                    break;
+                stato 2: // numero di linea (decine)
+                    linea=tono*10;
+                    stato=3;
+                    break;
+                stato 3; // numero di linea (unità)
+                    linea+=tono;
+                    stato=0;
+                    
+                    break;
+                    
             }
             log(s); 
 
