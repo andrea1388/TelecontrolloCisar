@@ -1,3 +1,10 @@
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Text;
+using System.Collections;
+using System.IO;
+
 namespace telecontrollo
 {
     public class IniParser
@@ -76,8 +83,8 @@ namespace telecontrollo
                         iniFile.Close();
                 }
             }
-            else
-                throw new FileNotFoundException("Unable to locate " + iniPath);
+//            else
+  //              throw new FileNotFoundException("Unable to locate " + iniPath);
     
         }
     

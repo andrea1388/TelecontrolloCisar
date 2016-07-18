@@ -10,10 +10,11 @@ namespace telecontrollo
     {
         static void Main(string[] args)
         {
-            main m = new main(); 
+            main m = new main();
+            if (args.Length == 1) m.mainloop(args[0]); else m.mainloop("telecontrollo.conf");
             //try
             {
-                m.mainloop();
+                
             }
             //catch (Exception e)
             {
@@ -27,9 +28,12 @@ namespace telecontrollo
     {
         BufferCircolare buffer = new BufferCircolare(10);
 
-        public void mainloop()
+        public void mainloop(String path2conffile)
         {
-            IniParser parser = new IniParser("telecontrollo.conf");
+            log("Server telecontrollo partito");
+            log("By iw3gcb - luglio 2016");
+
+            IniParser parser = new IniParser(path2conffile);
             bool tonodisponibile, squillotelefono;
             TonoDtmf tono = new TonoDtmf();
             int intervallopolling; // tempo tra un polling degli ingressi e il successivo in ms
@@ -37,9 +41,13 @@ namespace telecontrollo
             int tempominimoduratasquillo = 250; // tempo minimo durata dello squillo prima di considerarlo valido, in ms
             bool lineaconnessa = false; // indica se la linea è agganciata
             int tempomassimochiamata = 30000; // tempo max durata telefonata
-            String tmp;
+
             if(!int.TryParse(parser.GetSetting("ROOT", "intervallopolling"),out intervallopolling)) intervallopolling=10;
-            
+            String tmp= parser.GetSetting("ROOT", "codicedtmf");
+            if(tmp==null) tmp = "1968*";
+            CodiceDtmf codicedtmf=new CodiceDtmf(tmp);
+            log("codicedtmf=" + codicedtmf.ToString() );
+            log("intervallopolling=" + intervallopolling);
             Stopwatch tempochiamata = new Stopwatch();
             while (true)
             {
@@ -48,7 +56,7 @@ namespace telecontrollo
                 {
                     buffer.Inserisci(tono.Valore);
                     log("ricevuto tono: " + tono.Valore);
-                    ElaboraSequenzaToniRicevuti(buffer);
+                    ElaboraSequenzaToniRicevuti();
 
 
                 }
@@ -97,14 +105,19 @@ namespace telecontrollo
         {
 
         }
-        void ElaboraSequenzaToniRicevuti(BufferCircolare buffer)
+        void ElaboraSequenzaToniRicevuti()
         {
-            byte[] array = buffer.EstraiUltimiDati(5);
-            String s="";
-            for (int i = 0; i < 5; i++) s =s+ array[i].ToString() + " ";
+            byte[] array = buffer.EstraiUltimiDati((byte) codicedtmf.Length);
+            if ( codicedtmf.Confronta(array))
+            {
+                log("match");
+            }
+            log(s); 
 
-                log(s); 
-
+        }
+        bool CodiceEsatto(byte[] sequenza)
+        {
+            for(int i=0;i<sequenza.Length;i++) 
         }
         static void log(String msg)
         {
