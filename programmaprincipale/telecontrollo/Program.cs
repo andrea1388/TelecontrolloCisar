@@ -124,16 +124,17 @@ namespace telecontrollo
                     stato=1;
                     duratacomandodtmf.Start();
                     break;
-                stato 1: // codice di sblocco ricevuto. Attendo comando
+                case 1: // codice di sblocco ricevuto. Attendo comando
                     comando=tono;
                     stato=2;
                     break;
-                stato 2: // numero di linea (decine)
+                case 2: // numero di linea (decine)
                     linea=tono*10;
                     stato=3;
                     break;
-                stato 3; // numero di linea (unità)
+                case 3: // numero di linea (unità)
                     linea+=tono;
+                    ComandoRicevuto(comando,linea);
                     stato=0;
                     
                     break;
@@ -141,6 +142,17 @@ namespace telecontrollo
             }
             log(s); 
 
+        }
+        void ComandoRicevuto(byte comando,byte linea)
+        {
+            switch (comando)
+            {
+                case 0: //spegni
+                    break;
+                case 1: //accendi
+                    break;
+                
+            }
         }
         bool CodiceEsatto(byte[] sequenza)
         {
