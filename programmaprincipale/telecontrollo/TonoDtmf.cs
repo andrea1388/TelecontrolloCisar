@@ -8,93 +8,66 @@ namespace telecontrollo
     
     class TonoDtmf
     {
-        private byte tono; // valori da 0 a 15
-        private char codiceascii; // 0,.. 9, ABCD*#
-        public TonoDtmf(byte tono) 
+        private byte valore; // valori da 0 a 15
+        private char carattere; // 0,.. 9, ABCD*#
+        public TonoDtmf(byte v) 
         {
-            this.tono=tono;
-            switch (tono)
-            {
-                case 0:
-                    codiceascii = 'D';
-                    break;
-                case 11:
-                    codiceascii = '*';
-                    break;
-                case 12:
-                    codiceascii = '#';
-                    break;
-                case 13:
-                    codiceascii = 'A';
-                    break;
-                case 14:
-                    codiceascii = 'B';
-                    break;
-                case 15:
-                    codiceascii = 'C';
-                    break;
-                case 10:
-                    codiceascii = '0';
-                    break;
-                default:
-                    codiceascii = (char)('0' + (char)tono);
-                    break;
-
-            }
+            this.valore=v;
+            this.carattere = DaValoreACarattere(v);
         }
-        public TonoDtmf(Char tono)
+        public TonoDtmf(Char carattere)
         {
-            this.codiceascii = tono;
-            this.tono=to
+            this.carattere  = carattere;
+            this.valore=DaCarattereAValore(carattere );
 
         }
+        /*
         public TonoDtmf()
         {
             this.tono = 0;
         }
+        */
         public byte Valore
         {
-            get {return tono;}
-            set {tono = value;}
+            get {return valore;}
+            set {valore = value; carattere=DaValoreACarattere(valore);}
         }
-        Byte CharToTono()
+         public char Carattere
         {
-               switch (tono)
-            {
-                case 0:
-                    codiceascii = 'D';
-                    break;
-                case 11:
-                    codiceascii = '*';
-                    break;
-                case 12:
-                    codiceascii = '#';
-                    break;
-                case 13:
-                    codiceascii = 'A';
-                    break;
-                case 14:
-                    codiceascii = 'B';
-                    break;
-                case 15:
-                    codiceascii = 'C';
-                    break;
-                case 10:
-                    codiceascii = '0';
-                    break;
-                default:
-                    codiceascii = (char)('0' + (char)tono);
-                    break;
+            get {return carattere;}
+            set {carattere = value;valore=DaCarattereAValore(carattere);}
         }
-        Char TonoToChar(byte t) 
+         Byte DaCarattereAValore(char c)
+         {
+             if (c >= '1' && c <= '9') return (byte)(c - '0');
+             switch (c)
+             {
+                 case 'D':
+                     return 0;
+                 case '0':
+                     return 10;
+                 case '*':
+                     return 11;
+                 case '#':
+                     return 12;
+                 case 'A':
+                     return 13;
+                 case 'B':
+                     return 14;
+                 case 'C':
+                     return 15;
+             }
+             throw new Exception("DaCarattereAValore:bad char " + c.ToString() );
+         }
+        Char DaValoreACarattere(byte t) 
         {
             char chr;
             if (t >0 && t <= 9)
             {
-                chr=(char)('0' + tono);
+                chr=(char)('0' + t);
                 return chr;
             }
-            switch (tono)
+            switch (t)
             {
                 case 10:
                     return '0';

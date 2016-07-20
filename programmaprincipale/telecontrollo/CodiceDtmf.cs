@@ -7,17 +7,28 @@ namespace telecontrollo
 {
     class CodiceDtmf
     {
-        public CodiceDtmf(String codice)
+        byte[] codice;
+        public CodiceDtmf(String c)
         {
-                        codicedtmf=new byte[tmp.Length ];
-            for (int i = 0; i < tmp.Length; i++) {
-                TonoDtmf t=new TonoDtmf(tmp.Substring(i,1));
-                codicedtmf[i] = tmp;
+            codice=new byte[c.Length];
+            for (int i = 0; i < c.Length; i++)
+            {
+                TonoDtmf t = new TonoDtmf(c[i]);
+                codice[i] = t.Valore;
+            }
 
         }
-        public String ToString();
-        public bool Confronta(byte[] codice);
-        public readonly  byte Length();
+        //public String ToString();
+        public bool Confronta(byte[] cod)
+        {
+            for (int i = 0; i < codice.Length; i++)
+                if (codice[i] != cod[i]) return false;
+            return true;
+        }
+        public int Length
+        {
+            get {return codice.Length;}
+        }
 
     }
 }

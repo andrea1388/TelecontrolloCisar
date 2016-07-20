@@ -32,8 +32,13 @@ namespace telecontrollo
        
     class main
     {
-        BufferCircolare buffer = new BufferCircolare(10);
-
+        BufferCircolare buffer;
+        Stopwatch duratacomandodtmf = new Stopwatch();
+        int tempomassimoduratacomandodtmf = 15000; // tempo max entro il quale completare il comandoi dtmf
+        byte stato = 0;
+        char comando;
+        String linea;
+        CodiceDtmf codicedtmf;
         public void mainloop(String path2conffile)
         {
             log("Server telecontrollo partito");
@@ -41,28 +46,27 @@ namespace telecontrollo
 
             IniParser parser = new IniParser(path2conffile);
             bool tonodisponibile, squillotelefono;
-            TonoDtmf tono = new TonoDtmf();
+            TonoDtmf tono;
             int intervallopolling; // tempo tra un polling degli ingressi e il successivo in ms
             int duratasquillo = 0; // durata squillo in ms
             int tempominimoduratasquillo = 250; // tempo minimo durata dello squillo prima di considerarlo valido, in ms
             bool lineaconnessa = false; // indica se la linea è agganciata
             int tempomassimochiamata = 30000; // tempo max durata telefonata
-            int tempomassimoduratacomandodtmf = 15000; // tempo max entro il quale completare il comandoi dtmf
 
             if(!int.TryParse(parser.GetSetting("ROOT", "intervallopolling"),out intervallopolling)) intervallopolling=10;
             String tmp= parser.GetSetting("ROOT", "codicedtmf");
             if(tmp==null) tmp = "1968*";
-            CodiceDtmf codicedtmf=new CodiceDtmf(tmp);
-            log("codicedtmf=" + codicedtmf.ToString() );
+            codicedtmf=new CodiceDtmf(tmp);
+            buffer = new BufferCircolare((byte)(codicedtmf.Length+10));
+            //log("codicedtmf=" + codicedtmf.ToString() );
             log("intervallopolling=" + intervallopolling);
             Stopwatch tempochiamata = new Stopwatch();
-            Stopwatch duratacomandodtmf = new Stopwatch();
             while (true)
             {
                 leggiingressi(out tonodisponibile, out squillotelefono, out tono);
                 if (tonodisponibile)
                 {
-                    log("ricevuto tono: " + tono.Valore);
+                    //log("ricevuto tono: " + tono.Valore);
                     ElaboraSequenzaToniRicevuti(tono);
 
 
@@ -114,50 +118,60 @@ namespace telecontrollo
         }
         void ElaboraSequenzaToniRicevuti(TonoDtmf tono)
         {
-            if (duratacomandodtmf.ElapsedMilliseconds > tempomassimoduratacomandodtmf) stato=0;
+            if (duratacomandodtmf.ElapsedMilliseconds > tempomassimoduratacomandodtmf) stato = 0;
             switch (stato)
             {
                 case 0: // codice iniziale non ricevuto
                     buffer.Inserisci(tono.Valore);
                     byte[] array = buffer.EstraiUltimiDati((byte) codicedtmf.Length);
-                    if ( codicedtmf.Confronta(array)) log("match");
-                    stato=1;
-                    duratacomandodtmf.Start();
+                    if (codicedtmf.Confronta(array))
+                    {
+                        log("stato1:codice corrisponde");
+                        stato = 1;
+                        duratacomandodtmf.Start();
+                    }
                     break;
                 case 1: // codice di sblocco ricevuto. Attendo comando
-                    comando=tono;
-                    stato=2;
+                    comando=tono.Carattere;
+                    if(comando!='0' && comando !='1')
+                    {
+                        log("comando errato" + comando);
+                        stato = 0;
+                    }
+                    else
+                    {
+                        log("stato2:comando=" + comando);
+                        stato = 2;
+                    }
                     break;
                 case 2: // numero di linea (decine)
-                    linea=tono*10;
+                    linea=tono.Carattere.ToString();
+                    log("stato3");
                     stato=3;
                     break;
                 case 3: // numero di linea (unità)
-                    linea+=tono;
+                    linea += tono.Carattere.ToString();
+                    log("comando completato:linea=" + linea);
                     ComandoRicevuto(comando,linea);
                     stato=0;
                     
                     break;
                     
             }
-            log(s); 
 
         }
-        void ComandoRicevuto(byte comando,byte linea)
+        void ComandoRicevuto(char comando,String linea)
         {
             switch (comando)
             {
-                case 0: //spegni
+                case '0': //spegni
                     break;
-                case 1: //accendi
+                case '1': //accendi
                     break;
                 
             }
         }
-        bool CodiceEsatto(byte[] sequenza)
-        {
-            for(int i=0;i<sequenza.Length;i++) 
-        }
+      
         static void log(String msg)
         {
             Console.WriteLine(msg);
