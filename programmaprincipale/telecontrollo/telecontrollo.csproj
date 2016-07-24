@@ -32,6 +32,12 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Raspberry.IO">
+      <HintPath>..\..\..\raspberry-sharp-io-master\Raspberry.IO.GeneralPurpose\bin\Debug\Raspberry.IO.dll</HintPath>
+    </Reference>
+    <Reference Include="Raspberry.IO.GeneralPurpose">
+      <HintPath>..\..\..\raspberry-sharp-io-master\Raspberry.IO.GeneralPurpose\bin\Debug\Raspberry.IO.GeneralPurpose.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />

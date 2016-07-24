@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
 using System.Threading;
+using Raspberry.IO.GeneralPurpose;
+
 /*
     Attende comandi dtmf
     Formato comando
@@ -39,6 +41,8 @@ namespace telecontrollo
         char comando;
         String linea;
         CodiceDtmf codicedtmf;
+
+        
         public void mainloop(String path2conffile)
         {
             log("Server telecontrollo partito");
@@ -61,6 +65,29 @@ namespace telecontrollo
             //log("codicedtmf=" + codicedtmf.ToString() );
             log("intervallopolling=" + intervallopolling);
             Stopwatch tempochiamata = new Stopwatch();
+            
+            // definizione pin i/o
+            const ConnectorPin led1Pin = ConnectorPin.P1Pin26;
+            const ProcessorPin pin1=ProcessorPin.Pin29;
+            const ProcessorPin pin2=ProcessorPin.Pin2;
+
+            var pinTonoDisponibile = ConnectorPin.P1Pin11.ToProcessor();
+            var pinSquillo = ConnectorPin.P1Pin22.ToProcessor();
+            var pinAggangioLinea = ConnectorPin.P1Pin19.ToProcessor();
+            const pinTono0 = ConnectorPin.P1Pin13.ToProcessor();
+            var pinTono1 = ConnectorPin.P1Pin15.ToProcessor();
+            var pinTono2 = ConnectorPin.P1Pin16.ToProcessor();
+            var pinTono3 = ConnectorPin.P1Pin18.ToProcessor();
+            var driver = GpioConnectionSettings.DefaultDriver;
+            driver.Allocate(pinAggangioLinea, PinDirection.Output);
+            driver.Allocate(pinTonoDisponibile, PinDirection.Input);
+            driver.Allocate(pinSquillo, PinDirection.Input);
+            driver.Allocate(pinTono0, PinDirection.Input);
+            driver.Allocate(pinTono1, PinDirection.Input);
+            driver.Allocate(pinTono2, PinDirection.Input);
+            driver.Allocate(pinTono3, PinDirection.Input);
+            ProcessorPins pins;
+            pins = pin1 || pin2;
             while (true)
             {
                 leggiingressi(out tonodisponibile, out squillotelefono, out tono);
