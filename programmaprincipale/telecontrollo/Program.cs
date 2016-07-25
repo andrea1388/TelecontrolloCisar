@@ -56,6 +56,7 @@ namespace telecontrollo
             int tempominimoduratasquillo = 250; // tempo minimo durata dello squillo prima di considerarlo valido, in ms
             bool lineaconnessa = false; // indica se la linea è agganciata
             int tempomassimochiamata = 30000; // tempo max durata telefonata
+            byte indirizzi_pcf[4]; // indirizzi i2c dei pcf
 
             if(!int.TryParse(parser.GetSetting("ROOT", "intervallopolling"),out intervallopolling)) intervallopolling=10;
             String tmp= parser.GetSetting("ROOT", "codicedtmf");
@@ -189,9 +190,11 @@ namespace telecontrollo
         }
         void ComandoRicevuto(char comando,String linea)
         {
+            byte indirizzo_pcf=indirizzi_pcf[linea / 8];
             switch (comando)
             {
                 case '0': //spegni
+                    
                     break;
                 case '1': //accendi
                     break;
