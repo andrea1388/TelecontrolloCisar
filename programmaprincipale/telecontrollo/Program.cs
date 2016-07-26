@@ -41,12 +41,14 @@ namespace telecontrollo
         char comando;
         String linea;
         CodiceDtmf codicedtmf;
-
+        ProcessorPins pins, lettura;
+        IGpioConnectionDriver  driver;
         
         public void mainloop(String path2conffile)
         {
             log("Server telecontrollo partito");
             log("By iw3gcb - luglio 2016");
+            this.pins = ProcessorPins.Pin17 | ProcessorPins.Pin27 | ProcessorPins.Pin22 | ProcessorPins.Pin23 | ProcessorPins.Pin24 | ProcessorPins.Pin25;
 
             IniParser parser = new IniParser(path2conffile);
             bool tonodisponibile, squillotelefono;
@@ -56,7 +58,7 @@ namespace telecontrollo
             int tempominimoduratasquillo = 250; // tempo minimo durata dello squillo prima di considerarlo valido, in ms
             bool lineaconnessa = false; // indica se la linea è agganciata
             int tempomassimochiamata = 30000; // tempo max durata telefonata
-            byte indirizzi_pcf[4]; // indirizzi i2c dei pcf
+            byte[] indirizzi_pcf; // indirizzi i2c dei pcf
 
             if(!int.TryParse(parser.GetSetting("ROOT", "intervallopolling"),out intervallopolling)) intervallopolling=10;
             String tmp= parser.GetSetting("ROOT", "codicedtmf");
@@ -72,14 +74,15 @@ namespace telecontrollo
             const ProcessorPin pin1=ProcessorPin.Pin29;
             const ProcessorPin pin2=ProcessorPin.Pin2;
 
-            var pinTonoDisponibile = ConnectorPin.P1Pin11.ToProcessor();
+            var pinTonoDisponibile = ProcessorPin.Pin17;
+            pinTonoDisponibile.Input();
             var pinSquillo = ConnectorPin.P1Pin22.ToProcessor();
             var pinAggangioLinea = ConnectorPin.P1Pin19.ToProcessor();
             const pinTono0 = ConnectorPin.P1Pin13.ToProcessor();
             var pinTono1 = ConnectorPin.P1Pin15.ToProcessor();
             var pinTono2 = ConnectorPin.P1Pin16.ToProcessor();
             var pinTono3 = ConnectorPin.P1Pin18.ToProcessor();
-            var driver = GpioConnectionSettings.DefaultDriver;
+             driver = GpioConnectionSettings.DefaultDriver;
             driver.Allocate(pinAggangioLinea, PinDirection.Output);
             driver.Allocate(pinTonoDisponibile, PinDirection.Input);
             driver.Allocate(pinSquillo, PinDirection.Input);
@@ -87,8 +90,7 @@ namespace telecontrollo
             driver.Allocate(pinTono1, PinDirection.Input);
             driver.Allocate(pinTono2, PinDirection.Input);
             driver.Allocate(pinTono3, PinDirection.Input);
-            ProcessorPins pins;
-            pins = pin1 || pin2;
+ 
             while (true)
             {
                 leggiingressi(out tonodisponibile, out squillotelefono, out tono);
@@ -129,10 +131,11 @@ namespace telecontrollo
         }
         void leggiingressi(out bool tonodisponibile, out bool squillotelefono, out TonoDtmf tono)
         {
+            lettura = driver.Read(pins);
             Random rnd = new Random();
             tono = new TonoDtmf((byte)rnd.Next(16) );
-            tonodisponibile = true;
-            squillotelefono = false;
+            tonodisponibile = (lettura & ProcessorPins.Pin17)>0;
+            squillotelefono = (lettura & ProcessorPins.Pin17)>0;
 
 
         }
