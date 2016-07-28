@@ -40,12 +40,12 @@ namespace telecontrollo
     {
         BufferCircolare buffer;
         Stopwatch duratacomandodtmf = new Stopwatch();
-        int tempomassimoduratacomandodtmf = 150000; // tempo max entro il quale completare il comandoi dtmf
+        int tempomassimoduratacomandodtmf = 15000; // tempo max entro il quale completare il comandoi dtmf
         byte stato = 0;
         char comando;
         String linea;
         CodiceDtmf codicedtmf;
-        ProcessorPins pins, lettura;
+        ProcessorPins pins, lettura; 
         IGpioConnectionDriver  driver;
         byte[] indirizzi_pcf; // indirizzi i2c dei pcf
         I2cDriver i2cdriver;
@@ -79,6 +79,7 @@ namespace telecontrollo
             log("Server telecontrollo partito");
             log("By iw3gcb - luglio 2016");
             log("intervallopolling=" + intervallopolling);
+            log("indirizzi pcf=" + tmp);
             Stopwatch tempochiamata = new Stopwatch();
             
             // definizione pin i/o
@@ -101,7 +102,7 @@ namespace telecontrollo
                 leggiingressi(out tonodisponibile, out squillotelefono, out tono);
                 if (tonodisponibile)
                 {
-                    log("ricevuto tono: " + tono.Valore);
+                    log("ricevuto tono: " + tono.Carattere );
                     ElaboraSequenzaToniRicevuti(tono);
 
 
@@ -139,7 +140,7 @@ namespace telecontrollo
             #if !Debug
             lettura = driver.Read(pins);
             tonodisponibile = (lettura & ProcessorPins.Pin17)>0;
-            squillotelefono = (lettura & ProcessorPins.Pin17)>0;
+            squillotelefono = (lettura & ProcessorPins.Pin25)>0;
             byte t;
             t = (byte)(((uint)lettura >> 21) & 0x0f);
             tono = new TonoDtmf(t);
@@ -221,9 +222,10 @@ namespace telecontrollo
                 return;
             }
             byte indirizzo_pcf=indirizzi_pcf[l / 8];
-            Pcf8574Pin bitdacontrollare = (Pcf8574Pin)(Math.Pow (2, (l % 8)));
+            Pcf8574Pin bitdacontrollare = (Pcf8574Pin)(Math.Pow (2, ((l-1) % 8)));
             #if !Debug
             var deviceConnection = new Pcf8574I2cConnection(i2cdriver.Connect(indirizzo_pcf));
+            deviceConnection.GetPinsStatus();
             switch (comando)
             {
                 case '0': //spegni

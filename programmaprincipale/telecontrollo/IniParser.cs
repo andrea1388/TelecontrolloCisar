@@ -83,8 +83,8 @@ namespace telecontrollo
                         iniFile.Close();
                 }
             }
-//            else
-  //              throw new FileNotFoundException("Unable to locate " + iniPath);
+            else
+                throw new FileNotFoundException("Unable to locate " + iniPath);
     
         }
     
