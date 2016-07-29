@@ -221,7 +221,7 @@ namespace telecontrollo
                 log("ComandoRicevuto:Numero linea errata:" + linea);
                 return;
             }
-            byte indirizzo_pcf=indirizzi_pcf[l / 8];
+            byte indirizzo_pcf=indirizzi_pcf[(l-1) / 8];
             Pcf8574Pin bitdacontrollare = (Pcf8574Pin)(Math.Pow (2, ((l-1) % 8)));
             #if !Debug
             var deviceConnection = new Pcf8574I2cConnection(i2cdriver.Connect(indirizzo_pcf));
