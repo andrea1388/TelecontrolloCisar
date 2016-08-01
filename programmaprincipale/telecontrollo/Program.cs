@@ -64,9 +64,10 @@ namespace telecontrollo
             int tempomassimochiamata = 30000; // tempo max durata telefonata
             const ConnectorPin sdaPin = ConnectorPin.P1Pin03;
             const ConnectorPin sclPin = ConnectorPin.P1Pin05;
-           
+            bool statoPrecedenteTonoDiponibile = false;
             if(!int.TryParse(parser.GetSetting("ROOT", "intervallopolling"),out intervallopolling)) intervallopolling=10;
-            String tmp= parser.GetSetting("ROOT", "codicedtmf");
+            if (!int.TryParse(parser.GetSetting("ROOT", "tempomassimochiamata"), out tempomassimochiamata)) tempomassimochiamata = 30000;
+            String tmp = parser.GetSetting("ROOT", "codicedtmf");
             if(tmp==null) tmp = "1968*";
             codicedtmf=new CodiceDtmf(tmp);
             buffer = new BufferCircolare((byte)(codicedtmf.Length+10));
@@ -80,6 +81,8 @@ namespace telecontrollo
             log("By iw3gcb - luglio 2016");
             log("intervallopolling=" + intervallopolling);
             log("indirizzi pcf=" + tmp);
+            log("tempomassimochiamata=" + tempomassimochiamata.ToString());
+
             Stopwatch tempochiamata = new Stopwatch();
             
             // definizione pin i/o
@@ -102,11 +105,16 @@ namespace telecontrollo
                 leggiingressi(out tonodisponibile, out squillotelefono, out tono);
                 if (tonodisponibile)
                 {
-                    log("ricevuto tono: " + tono.Carattere );
-                    ElaboraSequenzaToniRicevuti(tono);
-
+                    if (tonodisponibile && !statoPrecedenteTonoDiponibile)
+                    {
+                        statoPrecedenteTonoDiponibile = true;
+                        log("ricevuto tono: " + tono.Carattere);
+                        ElaboraSequenzaToniRicevuti(tono);
+                        if (lineaconnessa) tempochiamata.Reset();
+                    }
 
                 }
+                else statoPrecedenteTonoDiponibile = false;
                 if (squillotelefono) duratasquillo += intervallopolling;
                 else duratasquillo = 0;
                 if (duratasquillo > tempominimoduratasquillo)
@@ -140,7 +148,7 @@ namespace telecontrollo
             #if !Debug
             lettura = driver.Read(pins);
             tonodisponibile = (lettura & ProcessorPins.Pin17)>0;
-            squillotelefono = (lettura & ProcessorPins.Pin25)>0;
+            squillotelefono = (lettura & ProcessorPins.Pin25)==0; // è attivo basso
             byte t;
             t = (byte)(((uint)lettura >> 21) & 0x0f);
             tono = new TonoDtmf(t);
@@ -181,7 +189,7 @@ namespace telecontrollo
                     {
                         log("stato1:codice corrisponde");
                         stato = 1;
-                        duratacomandodtmf.Start();
+                        duratacomandodtmf.Restart();
                     }
                     break;
                 case 1: // codice di sblocco ricevuto. Attendo comando
@@ -221,7 +229,12 @@ namespace telecontrollo
                 log("ComandoRicevuto:Numero linea errata:" + linea);
                 return;
             }
-            byte indirizzo_pcf=indirizzi_pcf[(l-1) / 8];
+            if (l < 1 || l > indirizzi_pcf.Length *8)
+            {
+                log("ComandoRicevuto:Numero linea errata:" + linea);
+                return;
+            }
+            byte indirizzo_pcf = indirizzi_pcf[(l - 1) / 8];
             Pcf8574Pin bitdacontrollare = (Pcf8574Pin)(Math.Pow (2, ((l-1) % 8)));
             #if !Debug
             var deviceConnection = new Pcf8574I2cConnection(i2cdriver.Connect(indirizzo_pcf));
