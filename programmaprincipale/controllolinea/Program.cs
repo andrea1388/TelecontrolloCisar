@@ -12,18 +12,15 @@ namespace telecontrollo
 {
     class Program
     {
+        static Pcf scheda;
         static byte[] indirizzi_pcf; // indirizzi i2c dei pcf
-        static I2cDriver i2cdriver;
-        const ConnectorPin sdaPin = ConnectorPin.P1Pin03;
-        const ConnectorPin sclPin = ConnectorPin.P1Pin05;
-        
         static void Main(string[] args)
         {
             IniParser parser;
             Console.WriteLine("controllolinea By Andrea Carrara 2016");
             if(args.Length!=2 && args.Length!=0)
             {
-                Console.WriteLine("Uso: controllolinea <numero linea> <on|off>");
+                Console.WriteLine("Uso: controllolinea [-t] | <numero linea> <on|off>");
                 return;
             }
             try
@@ -39,12 +36,24 @@ namespace telecontrollo
             String[] indirizzi = tmp.Split(',');
             Console.WriteLine("indirizzi pcf=" + tmp);
             indirizzi_pcf=new byte[indirizzi.Length ];
-            for (int ip = 0; ip < indirizzi.Length; ip++) indirizzi_pcf[ip] = Convert.ToByte (indirizzi[ip],16);
+            scheda = new Pcf(indirizzi_pcf);
 
 
             // inizio elaborazione
-            i2cdriver = new I2cDriver(sdaPin.ToProcessor(), sclPin.ToProcessor());
-                
+            
+            if(args[0].ToLower()=="-t")
+            {
+                Random rnd = new Random();
+                scheda.LeggiLinee();
+                while (true )
+                {
+                    int linea = 1+rnd.Next(16);
+                    int cmd = rnd.Next(2);
+                    if (cmd == 1) scheda.AccendiLinea(linea); else scheda.SpegniLinea(linea);
+
+                }
+            }
+            
             if(args.Length==0)
             {
                 StampaStatoLinee();
@@ -64,19 +73,13 @@ namespace telecontrollo
                     Console.WriteLine("linea errata");
                     return;
                 }
-                byte indirizzo_pcf = indirizzi_pcf[(linea -1) / 8];
-                Console.WriteLine("Uso indirizzo: 0x" + indirizzo_pcf.ToString("X"));
-                Pcf8574Pin bitdacontrollare = (Pcf8574Pin)(Math.Pow(2, ((linea - 1) % 8)));
-                var deviceConnection = new Pcf8574I2cConnection(i2cdriver.Connect(indirizzo_pcf));
-                deviceConnection.GetPinsStatus();
-                Console.WriteLine("bit: " + bitdacontrollare.ToString("X"));
                 switch (args[1].ToUpper())
                 {
                     case "ON":
-                        deviceConnection.SetPinStatus(bitdacontrollare, true);
+                        scheda.AccendiLinea(linea);
                         break;
                     case "OFF":
-                        deviceConnection.SetPinStatus(bitdacontrollare, false);
+                        scheda.SpegniLinea(linea);
                         break;
                     default:
                         Console.WriteLine("Comando errato");
@@ -90,10 +93,10 @@ namespace telecontrollo
         }
         static void StampaStatoLinee()
         {
+            UInt16[] stato = scheda.LeggiLinee();
             for (int i = 0; i < indirizzi_pcf.Length; i++)
             {
-                var deviceConnection = new Pcf8574I2cConnection(i2cdriver.Connect(indirizzi_pcf[i]));
-                Console.Write(deviceConnection.GetPinsStatus().ToString("X2"));
+                Console.Write(stato[i].ToString("X2"));
             }
             Console.WriteLine();
 
