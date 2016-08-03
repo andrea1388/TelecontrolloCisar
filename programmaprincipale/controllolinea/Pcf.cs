@@ -16,14 +16,42 @@ namespace telecontrollo
         const ConnectorPin sclPin = ConnectorPin.P1Pin05;
 
 
-        public Pcf(byte[] indirizzi_pcf)
+        public Pcf(String indirizzi_pcf)
         {
+            String[] indirizzi = indirizzi_pcf.Split(',');
             i2cdriver = new I2cDriver(sdaPin.ToProcessor(), sclPin.ToProcessor());
-            for (int ip = 0; ip < indirizzi_pcf.Length; ip++)
+            conn = new Pcf8574I2cConnection[indirizzi.Length]; 
+            for (int ip = 0; ip < indirizzi.Length; ip++)
             {
-                conn[ip] = new Pcf8574I2cConnection(i2cdriver.Connect(indirizzi_pcf[ip]));
+                conn[ip] = new Pcf8574I2cConnection(i2cdriver.Connect(Convert.ToByte(indirizzi[ip], 16)));
             }
+            LeggiLinee();
 
+        }
+        public int NumeroLineeIO 
+        { 
+            get
+            {
+                return conn.Length * 8;
+            }
+        }
+        public int NumeroPcf
+        {
+            get
+            {
+                return conn.Length;
+            }
+        }
+        public ushort i2cClockDiv
+        {
+            get
+            {
+                return (ushort)i2cdriver.ClockDivider;
+            }
+            set
+            {
+                i2cdriver.ClockDivider=value ;
+            }
         }
         public bool AccendiLinea(int numero)
         {
@@ -35,10 +63,10 @@ namespace telecontrollo
         }
         public UInt16[] LeggiLinee()
         {
-            int tentativi=0;
             UInt16[] ret = new UInt16[conn.Length];
             for (int pcf = 0; pcf < conn.Length; pcf++)
             {
+                int tentativi = 0;
                 var deviceConnection = conn[pcf];
                 ret[pcf] = 0x100;
                 while(tentativi++ < 5)
@@ -50,7 +78,7 @@ namespace telecontrollo
                     }
                     catch (Exception e)
                     {
-                        Console.WriteLine(e.Message);
+                        Console.WriteLine("Errore GetPinsStatus: tentativo {0} - {1}", tentativi, e.Message);
                         System.Threading.Thread.Sleep(1);
                     }
                 }
@@ -67,12 +95,12 @@ namespace telecontrollo
             {
                 try
                 {
-                    deviceConnection.SetPinStatus(bitdacontrollare, true);
+                    deviceConnection.SetPinStatus(bitdacontrollare, on);
                     return true;
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine(e.Message);
+                    Console.WriteLine("Errore SetPinStatus: tentativo {0} - {1}", tentativi, e.Message);
                     System.Threading.Thread.Sleep(1);
                 }
             }

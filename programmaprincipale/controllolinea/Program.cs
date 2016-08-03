@@ -13,12 +13,12 @@ namespace telecontrollo
     class Program
     {
         static Pcf scheda;
-        static byte[] indirizzi_pcf; // indirizzi i2c dei pcf
         static void Main(string[] args)
         {
             IniParser parser;
+            ushort I2cClockDiv = 2500;
             Console.WriteLine("controllolinea By Andrea Carrara 2016");
-            if(args.Length!=2 && args.Length!=0)
+            if (args.Length==1 && args[0].ToLower() == "-h")
             {
                 Console.WriteLine("Uso: controllolinea [-t] | <numero linea> <on|off>");
                 return;
@@ -33,25 +33,31 @@ namespace telecontrollo
                 return;
             }
             String tmp = parser.GetSetting("ROOT", "indirizziPcf");
-            String[] indirizzi = tmp.Split(',');
+            //indirizzi_pcf=new byte[indirizzi.Length ];
+            scheda = new Pcf(tmp);
+            
             Console.WriteLine("indirizzi pcf=" + tmp);
-            indirizzi_pcf=new byte[indirizzi.Length ];
-            scheda = new Pcf(indirizzi_pcf);
+            if (!ushort.TryParse(parser.GetSetting("ROOT", "I2cClockDiv"), out I2cClockDiv)) I2cClockDiv = 2500;
+            scheda.i2cClockDiv = I2cClockDiv;
+            Console.WriteLine("I2cClockDiv: " + scheda.i2cClockDiv.ToString() );
 
 
             // inizio elaborazione
-            
-            if(args[0].ToLower()=="-t")
+
+            if (args.Length == 1 && args[0].ToLower() == "-t")
             {
                 Random rnd = new Random();
                 scheda.LeggiLinee();
-                while (true )
+                while (!Console.KeyAvailable )
                 {
                     int linea = 1+rnd.Next(16);
                     int cmd = rnd.Next(2);
+                    Console.WriteLine("Linea {0} - comando {1}", linea, cmd);
                     if (cmd == 1) scheda.AccendiLinea(linea); else scheda.SpegniLinea(linea);
+                    System.Threading.Thread.Sleep(10);
 
                 }
+                return;
             }
             
             if(args.Length==0)
@@ -68,11 +74,13 @@ namespace telecontrollo
                     Console.WriteLine("linea errata");
                     return;
                 }
-                if (linea < 0 || linea > indirizzi_pcf.Length * 8)
+                if (linea < 0 || linea > scheda.NumeroLineeIO )
                 {
                     Console.WriteLine("linea errata");
                     return;
                 }
+                Console.WriteLine("Linea {0} - comando {1}", linea, args[1].ToUpper());
+                //scheda.LeggiLinee(); // carica lo stato iniziale
                 switch (args[1].ToUpper())
                 {
                     case "ON":
@@ -94,9 +102,9 @@ namespace telecontrollo
         static void StampaStatoLinee()
         {
             UInt16[] stato = scheda.LeggiLinee();
-            for (int i = 0; i < indirizzi_pcf.Length; i++)
+            for (int i = scheda.NumeroPcf-1;i>-1  ; i--)
             {
-                Console.Write(stato[i].ToString("X2"));
+                if (stato[i] >= 0x100) Console.Write("--"); else Console.Write(stato[i].ToString("X2"));
             }
             Console.WriteLine();
 
