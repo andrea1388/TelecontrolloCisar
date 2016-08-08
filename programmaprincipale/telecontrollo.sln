@@ -19,6 +19,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Raspberry.IO.SerialPeripher
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "controllolinea", "controllolinea\controllolinea.csproj", "{0DBB69BB-ED01-4478-BE7F-E4213F9BFADC}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SchedaHWHost", "SchedaHWHost\SchedaHWHost.csproj", "{FF9B1FBD-AE0C-4D8F-8AF8-DDCD8CBC3176}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -57,6 +59,10 @@ Global
 		{0DBB69BB-ED01-4478-BE7F-E4213F9BFADC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0DBB69BB-ED01-4478-BE7F-E4213F9BFADC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0DBB69BB-ED01-4478-BE7F-E4213F9BFADC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FF9B1FBD-AE0C-4D8F-8AF8-DDCD8CBC3176}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FF9B1FBD-AE0C-4D8F-8AF8-DDCD8CBC3176}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FF9B1FBD-AE0C-4D8F-8AF8-DDCD8CBC3176}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FF9B1FBD-AE0C-4D8F-8AF8-DDCD8CBC3176}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
