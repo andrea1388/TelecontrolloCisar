@@ -48,12 +48,12 @@ namespace telecontrollo
         ProcessorPins pins, lettura; 
         IGpioConnectionDriver  driver;
         byte[] indirizzi_pcf; // indirizzi i2c dei pcf
-        I2cDriver i2cdriver;
         const ProcessorPin pinAggangioLinea=ProcessorPin.Pin10;
-
+        Pcf scheda;
         public void mainloop(String path2conffile)
         {
-
+            // variabili locali
+            ushort I2cClockDiv = 2500;
             IniParser parser = new IniParser(path2conffile);
             bool tonodisponibile, squillotelefono;
             TonoDtmf tono;
@@ -62,9 +62,10 @@ namespace telecontrollo
             int tempominimoduratasquillo = 250; // tempo minimo durata dello squillo prima di considerarlo valido, in ms
             bool lineaconnessa = false; // indica se la linea è agganciata
             int tempomassimochiamata = 30000; // tempo max durata telefonata
-            const ConnectorPin sdaPin = ConnectorPin.P1Pin03;
-            const ConnectorPin sclPin = ConnectorPin.P1Pin05;
             bool statoPrecedenteTonoDiponibile = false;
+
+            log("Server telecontrollo - By iw3gcb - luglio 2016");
+            // carica impostazioni
             if(!int.TryParse(parser.GetSetting("ROOT", "intervallopolling"),out intervallopolling)) intervallopolling=10;
             if (!int.TryParse(parser.GetSetting("ROOT", "tempomassimochiamata"), out tempomassimochiamata)) tempomassimochiamata = 30000;
             String tmp = parser.GetSetting("ROOT", "codicedtmf");
@@ -73,15 +74,18 @@ namespace telecontrollo
             buffer = new BufferCircolare((byte)(codicedtmf.Length+10));
             //log("codicedtmf=" + codicedtmf.ToString() );
             tmp = parser.GetSetting("ROOT", "indirizziPcf");
-            String[] indirizzi = tmp.Split(',');
+            log("indirizzi pcf=" + tmp);
+            scheda = new Pcf(tmp);
+            if (!ushort.TryParse(parser.GetSetting("ROOT", "I2cClockDiv"), out I2cClockDiv)) I2cClockDiv = 2500;
+            scheda.i2cClockDiv = I2cClockDiv;
+            log("I2cClockDiv: " + scheda.i2cClockDiv.ToString());
+            /*String[] indirizzi = tmp.Split(',');
             indirizzi_pcf=new byte[indirizzi.Length ];
             for (int ip = 0; ip < indirizzi.Length; ip++) indirizzi_pcf[ip] = Convert.ToByte (indirizzi[ip],16);
-
-            log("Server telecontrollo partito");
-            log("By iw3gcb - luglio 2016");
+            */
             log("intervallopolling=" + intervallopolling);
-            log("indirizzi pcf=" + tmp);
             log("tempomassimochiamata=" + tempomassimochiamata.ToString());
+            log("Server telecontrollo partito");
 
             Stopwatch tempochiamata = new Stopwatch();
             
@@ -89,7 +93,6 @@ namespace telecontrollo
             // pin da leggere con una sola lettura contemporanea
             // 17= tonodisponibile, 21=bit0 tono, 22=bit1, 23= bit3, 24=bit3, 25=squillo
             #if !Debug
-            i2cdriver = new I2cDriver(sdaPin.ToProcessor(), sclPin.ToProcessor());
             pins = ProcessorPins.Pin17 | ProcessorPins.Pin21 | ProcessorPins.Pin22 | ProcessorPins.Pin23 | ProcessorPins.Pin24 | ProcessorPins.Pin25;
             driver = GpioConnectionSettings.DefaultDriver;
             driver.Allocate(pinAggangioLinea, PinDirection.Output);
@@ -221,40 +224,55 @@ namespace telecontrollo
             }
 
         }
-        void ComandoRicevuto(char comando,String linea)
+        void ComandoRicevuto(char comando,String l)
         {
-            int l;
-            if(!int.TryParse(linea,out l))
+            int linea;
+            if(!int.TryParse(l,out linea))
+            {
+                log("ComandoRicevuto:Numero linea errata:" + l);
+                return;
+            }
+            if (linea < 1 || linea > scheda.NumeroLineeIO )
             {
                 log("ComandoRicevuto:Numero linea errata:" + linea);
                 return;
             }
-            if (l < 1 || l > indirizzi_pcf.Length *8)
-            {
-                log("ComandoRicevuto:Numero linea errata:" + linea);
-                return;
-            }
-            byte indirizzo_pcf = indirizzi_pcf[(l - 1) / 8];
-            Pcf8574Pin bitdacontrollare = (Pcf8574Pin)(Math.Pow (2, ((l-1) % 8)));
             #if !Debug
-            var deviceConnection = new Pcf8574I2cConnection(i2cdriver.Connect(indirizzo_pcf));
-            deviceConnection.GetPinsStatus();
+            bool ok;
             switch (comando)
             {
                 case '0': //spegni
-                    deviceConnection.SetPinStatus(bitdacontrollare , false);
+                    ok=scheda.SpegniLinea(linea);
                     break;
                 case '1': //accendi
-                    deviceConnection.SetPinStatus(bitdacontrollare, true);
+                    ok=scheda.AccendiLinea(linea);
                     break;
-                
+                default:
+                    ok = false;
+                    break;
             }
+            String msg;
+            if (ok)
+            {
+                msg = "Linea_" + linea.ToString();
+                if (comando == '0') msg += "_spenta"; else msg += "_accesa";
+            }
+            else
+            {
+                msg = "Comando_non_riuscito";
+            }
+            var info = new ProcessStartInfo();
+            info.FileName="e2speak";
+            info.Arguments ="";
+            Process.Start(info);
             #endif
         }
       
         static void log(String msg)
         {
-            Console.WriteLine(msg);
+            DateTime t = DateTime.Now;
+            String dt = t.ToString("d/M/y HH:mm:ss:FFF ");
+            Console.WriteLine(dt + msg);
         }
     }
     }

@@ -41,6 +41,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\controllolinea\Pcf.cs">
+      <Link>Pcf.cs</Link>
+    </Compile>
     <Compile Include="BufferCircolare.cs" />
     <Compile Include="CodiceDtmf.cs" />
     <Compile Include="IniParser.cs" />
