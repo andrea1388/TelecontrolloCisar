@@ -47,9 +47,11 @@ namespace telecontrollo
         CodiceDtmf codicedtmf;
         ProcessorPins pins, lettura; 
         IGpioConnectionDriver  driver;
-        byte[] indirizzi_pcf; // indirizzi i2c dei pcf
         const ProcessorPin pinAggangioLinea=ProcessorPin.Pin10;
+        const ProcessorPin pinAggangioPTT = ProcessorPin.Pin4;
         Pcf scheda;
+        bool lineaconnessa = false; // indica se la linea è agganciata
+            
         public void mainloop(String path2conffile)
         {
             // variabili locali
@@ -60,7 +62,6 @@ namespace telecontrollo
             int intervallopolling; // tempo tra un polling degli ingressi e il successivo in ms
             int duratasquillo = 0; // durata squillo in ms
             int tempominimoduratasquillo = 250; // tempo minimo durata dello squillo prima di considerarlo valido, in ms
-            bool lineaconnessa = false; // indica se la linea è agganciata
             int tempomassimochiamata = 30000; // tempo max durata telefonata
             bool statoPrecedenteTonoDiponibile = false;
 
@@ -96,6 +97,7 @@ namespace telecontrollo
             pins = ProcessorPins.Pin17 | ProcessorPins.Pin21 | ProcessorPins.Pin22 | ProcessorPins.Pin23 | ProcessorPins.Pin24 | ProcessorPins.Pin25;
             driver = GpioConnectionSettings.DefaultDriver;
             driver.Allocate(pinAggangioLinea, PinDirection.Output);
+            driver.Allocate(pinAggangioPTT, PinDirection.Output);
             driver.Allocate(ProcessorPin.Pin17, PinDirection.Input);
             driver.Allocate(ProcessorPin.Pin21, PinDirection.Input);
             driver.Allocate(ProcessorPin.Pin22, PinDirection.Input);
@@ -171,14 +173,30 @@ namespace telecontrollo
         {
             #if !Debug
             driver.Write(pinAggangioLinea, true);
+            log("Linea telefonica agganciata");
             #endif
         }
         void SganciaLineaTelefonica()
         {
             #if !Debug
             driver.Write(pinAggangioLinea, false);
+            log("Linea telefonica sganciata");
             #endif
 
+        }
+        void AggancioPTT()
+        {
+            #if !Debug
+            driver.Write(pinAggangioPTT, true);
+            log("PTT agganciato");
+            #endif
+        }
+        void SgancioPTT()
+        {
+            #if !Debug
+            driver.Write(pinAggangioPTT, false);
+            log("PTT sganciato");
+            #endif
         }
         void ElaboraSequenzaToniRicevuti(TonoDtmf tono)
         {
@@ -261,10 +279,17 @@ namespace telecontrollo
             {
                 msg = "Comando_non_riuscito";
             }
+            if(!lineaconnessa)
+            {
+                AggancioPTT();
+                Thread.Sleep(300);
+            }
             var info = new ProcessStartInfo();
             info.FileName="e2speak";
-            info.Arguments ="";
-            Process.Start(info);
+            info.Arguments = msg + " -v it -p 70 -s 155 > /dev/null 2> /dev /null";
+            Process p=Process.Start(info);
+            p.WaitForExit();
+            if (!lineaconnessa) SgancioPTT();
             #endif
         }
       
