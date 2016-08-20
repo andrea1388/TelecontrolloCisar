@@ -51,7 +51,8 @@ namespace telecontrollo
         const ProcessorPin pinAggangioPTT = ProcessorPin.Pin4;
         Pcf scheda;
         bool lineaconnessa = false; // indica se la linea è agganciata
-            
+        String parametriE2speak;
+
         public void mainloop(String path2conffile)
         {
             // variabili locali
@@ -62,7 +63,7 @@ namespace telecontrollo
             int intervallopolling; // tempo tra un polling degli ingressi e il successivo in ms
             int duratasquillo = 0; // durata squillo in ms
             int tempominimoduratasquillo = 250; // tempo minimo durata dello squillo prima di considerarlo valido, in ms
-            int tempomassimochiamata = 30000; // tempo max durata telefonata
+            int tempomassimochiamata = 6000; // tempo max durata telefonata
             bool statoPrecedenteTonoDiponibile = false;
 
             log("Server telecontrollo - By iw3gcb - luglio 2016");
@@ -77,15 +78,14 @@ namespace telecontrollo
             tmp = parser.GetSetting("ROOT", "indirizziPcf");
             log("indirizzi pcf=" + tmp);
             scheda = new Pcf(tmp);
+            parametriE2speak = parser.GetSetting("ROOT", "parametriE2speak");
+            if (parametriE2speak == null) parametriE2speak = "-v it -p 70 -s 155 2>/dev/null";
             if (!ushort.TryParse(parser.GetSetting("ROOT", "I2cClockDiv"), out I2cClockDiv)) I2cClockDiv = 2500;
             scheda.i2cClockDiv = I2cClockDiv;
             log("I2cClockDiv: " + scheda.i2cClockDiv.ToString());
-            /*String[] indirizzi = tmp.Split(',');
-            indirizzi_pcf=new byte[indirizzi.Length ];
-            for (int ip = 0; ip < indirizzi.Length; ip++) indirizzi_pcf[ip] = Convert.ToByte (indirizzi[ip],16);
-            */
             log("intervallopolling=" + intervallopolling);
             log("tempomassimochiamata=" + tempomassimochiamata.ToString());
+            log("parametriE2speak=" + parametriE2speak);
             log("Server telecontrollo partito");
 
             Stopwatch tempochiamata = new Stopwatch();
@@ -115,7 +115,7 @@ namespace telecontrollo
                         statoPrecedenteTonoDiponibile = true;
                         log("ricevuto tono: " + tono.Carattere);
                         ElaboraSequenzaToniRicevuti(tono);
-                        if (lineaconnessa) tempochiamata.Reset();
+                        if (lineaconnessa) tempochiamata.Restart();
                     }
 
                 }
@@ -128,7 +128,7 @@ namespace telecontrollo
                     {
                         lineaconnessa = true;
                         AgganciaLineaTelefonica();
-                        tempochiamata.Start();
+                        tempochiamata.Restart();
                         duratasquillo = 0;
                         log("linea agganciata");
                     }
@@ -138,7 +138,7 @@ namespace telecontrollo
                     if (tempochiamata.ElapsedMilliseconds > tempomassimochiamata)
                     {
                         SganciaLineaTelefonica();
-                        tempochiamata.Reset();
+                        tempochiamata.Stop();
                         lineaconnessa = false;
                         log("linea sganciata per limite temporale");
                     }
@@ -281,12 +281,13 @@ namespace telecontrollo
             }
             if(!lineaconnessa)
             {
+                Thread.Sleep(1000);
                 AggancioPTT();
                 Thread.Sleep(300);
             }
             var info = new ProcessStartInfo();
-            info.FileName="e2speak";
-            info.Arguments = msg + " -v it -p 70 -s 155 > /dev/null 2> /dev /null";
+            info.FileName="espeak";
+            info.Arguments = msg + " " + parametriE2speak;
             Process p=Process.Start(info);
             p.WaitForExit();
             if (!lineaconnessa) SgancioPTT();
