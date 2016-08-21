@@ -48,7 +48,7 @@ namespace telecontrollo
         ProcessorPins pins, lettura; 
         IGpioConnectionDriver  driver;
         const ProcessorPin pinAggangioLinea=ProcessorPin.Pin10;
-        const ProcessorPin pinAggangioPTT = ProcessorPin.Pin4;
+        const ProcessorPin pinAggangioPTT = ProcessorPin.Pin18;
         Pcf scheda;
         bool lineaconnessa = false; // indica se la linea è agganciata
         String parametriE2speak;
@@ -56,8 +56,19 @@ namespace telecontrollo
         public void mainloop(String path2conffile)
         {
             // variabili locali
+            IniParser parser;
             ushort I2cClockDiv = 2500;
-            IniParser parser = new IniParser(path2conffile);
+            try
+            {
+                parser = new IniParser(path2conffile);
+            }
+            catch (Exception e)
+            {
+
+                log("Errore " + e.Message );
+                return;
+            }
+            
             bool tonodisponibile, squillotelefono;
             TonoDtmf tono;
             int intervallopolling; // tempo tra un polling degli ingressi e il successivo in ms
@@ -67,6 +78,7 @@ namespace telecontrollo
             bool statoPrecedenteTonoDiponibile = false;
 
             log("Server telecontrollo - By iw3gcb - luglio 2016");
+            log("File di configurazione=" + path2conffile);
             // carica impostazioni
             if(!int.TryParse(parser.GetSetting("ROOT", "intervallopolling"),out intervallopolling)) intervallopolling=10;
             if (!int.TryParse(parser.GetSetting("ROOT", "tempomassimochiamata"), out tempomassimochiamata)) tempomassimochiamata = 30000;
@@ -105,6 +117,8 @@ namespace telecontrollo
             driver.Allocate(ProcessorPin.Pin24, PinDirection.Input);
             driver.Allocate(ProcessorPin.Pin25, PinDirection.Input);
 #endif
+            SganciaLineaTelefonica();
+            SgancioPTT();
             while (true)
             {
                 leggiingressi(out tonodisponibile, out squillotelefono, out tono);
