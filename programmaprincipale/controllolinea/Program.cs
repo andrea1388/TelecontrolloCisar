@@ -33,7 +33,6 @@ namespace telecontrollo
                 return;
             }
             String tmp = parser.GetSetting("ROOT", "indirizziPcf");
-            //indirizzi_pcf=new byte[indirizzi.Length ];
             scheda = new Pcf(tmp);
             
             Console.WriteLine("indirizzi pcf=" + tmp);

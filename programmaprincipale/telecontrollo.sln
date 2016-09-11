@@ -21,27 +21,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "controllolinea", "controllo
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SchedaHWHost", "SchedaHWHost\SchedaHWHost.csproj", "{FF9B1FBD-AE0C-4D8F-8AF8-DDCD8CBC3176}"
 EndProject
-Project("{E24C65DC-7377-472B-9ABA-BC803B73C61A}") = "TelecontrolloWebApp(1)", "http://localhost:50711", "{99E6FAA7-1A5F-4908-94F3-F90ABD7F280A}"
-	ProjectSection(WebsiteProperties) = preProject
-		UseIISExpress = "true"
-		TargetFrameworkMoniker = ".NETFramework,Version%3Dv4.0"
-		Debug.AspNetCompiler.VirtualPath = "/localhost_50711"
-		Debug.AspNetCompiler.PhysicalPath = "TelecontrolloWebApp\"
-		Debug.AspNetCompiler.TargetPath = "PrecompiledWeb\localhost_50711\"
-		Debug.AspNetCompiler.Updateable = "true"
-		Debug.AspNetCompiler.ForceOverwrite = "true"
-		Debug.AspNetCompiler.FixedNames = "false"
-		Debug.AspNetCompiler.Debug = "True"
-		Release.AspNetCompiler.VirtualPath = "/localhost_50711"
-		Release.AspNetCompiler.PhysicalPath = "TelecontrolloWebApp\"
-		Release.AspNetCompiler.TargetPath = "PrecompiledWeb\localhost_50711\"
-		Release.AspNetCompiler.Updateable = "true"
-		Release.AspNetCompiler.ForceOverwrite = "true"
-		Release.AspNetCompiler.FixedNames = "false"
-		Release.AspNetCompiler.Debug = "False"
-		SlnRelativePath = "TelecontrolloWebApp\"
-		DefaultWebSiteLanguage = "Visual C#"
-	EndProjectSection
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TelecontrolloWebApp", "TelecontrolloWebApp\TelecontrolloWebApp.csproj", "{B6460085-AE9B-4E5B-8151-8CE767D9DD13}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -85,10 +65,10 @@ Global
 		{FF9B1FBD-AE0C-4D8F-8AF8-DDCD8CBC3176}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FF9B1FBD-AE0C-4D8F-8AF8-DDCD8CBC3176}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FF9B1FBD-AE0C-4D8F-8AF8-DDCD8CBC3176}.Release|Any CPU.Build.0 = Release|Any CPU
-		{99E6FAA7-1A5F-4908-94F3-F90ABD7F280A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{99E6FAA7-1A5F-4908-94F3-F90ABD7F280A}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{99E6FAA7-1A5F-4908-94F3-F90ABD7F280A}.Release|Any CPU.ActiveCfg = Debug|Any CPU
-		{99E6FAA7-1A5F-4908-94F3-F90ABD7F280A}.Release|Any CPU.Build.0 = Debug|Any CPU
+		{B6460085-AE9B-4E5B-8151-8CE767D9DD13}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B6460085-AE9B-4E5B-8151-8CE767D9DD13}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B6460085-AE9B-4E5B-8151-8CE767D9DD13}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B6460085-AE9B-4E5B-8151-8CE767D9DD13}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

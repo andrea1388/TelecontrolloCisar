@@ -30,7 +30,6 @@ namespace telecontrollo
             String[] keyPair = null;
     
             iniFilePath = iniPath;
-    
             if (File.Exists(iniPath))
             {
                 try
