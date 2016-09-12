@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading;
 using Raspberry.IO.Components.Expanders.Pcf8574;
 using Raspberry.IO.GeneralPurpose;
 using Raspberry.IO.InterIntegratedCircuit;
 using System.Text;
 
 
-// controllolinea <numero linea> <on|off>
+// controllolinea <numero linea> <on|off|offonoff [tempo]>
 // controllolinea
 namespace telecontrollo
 {
@@ -20,7 +21,7 @@ namespace telecontrollo
             Console.WriteLine("controllolinea By Andrea Carrara 2016");
             if (args.Length==1 && args[0].ToLower() == "-h")
             {
-                Console.WriteLine("Uso: controllolinea [-t] | <numero linea> <on|off>");
+                Console.WriteLine("Uso: controllolinea [-t] | <numero linea> <on|off|offonoff [tempo]>");
                 return;
             }
             try
@@ -65,7 +66,7 @@ namespace telecontrollo
                 
                 return;
             }
-            else
+            if (args.Length == 2 || args.Length == 3)
             {
                 int linea;
                 if (!int.TryParse(args[0], out linea))
@@ -86,6 +87,24 @@ namespace telecontrollo
                         scheda.AccendiLinea(linea);
                         break;
                     case "OFF":
+                        scheda.SpegniLinea(linea);
+                        break;
+                    case "OFFONOFF":
+                        int tempo = 0;
+                        if (args.Length!=3)
+                        {
+                            Console.WriteLine("tempo mancante");
+                            return;
+                        }
+                        if (!int.TryParse(args[2], out tempo))
+                        {
+                            Console.WriteLine("tempo errato");
+                            return;
+                        }
+                        scheda.SpegniLinea(linea);
+                        Thread.Sleep(100);
+                        scheda.AccendiLinea (linea);
+                        Thread.Sleep(1000 * tempo);
                         scheda.SpegniLinea(linea);
                         break;
                     default:
