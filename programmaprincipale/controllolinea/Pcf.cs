@@ -104,6 +104,9 @@ namespace telecontrollo
             }
 #else
             UInt16[] ret = new UInt16[2];
+            ret[0] = 0xaa;
+            ret[1] = 0x99;
+
 #endif
             
             return ret;
@@ -132,6 +135,12 @@ namespace telecontrollo
 #else
             return true;
 #endif
+        }
+        public bool statolinea(int linea , ushort[] stati)
+        {
+            int banco = (linea-1) / 8;
+            int bitdacontrollare = (int)Math.Pow(2, ((linea - 1) % 8));
+            return (stati[banco] & bitdacontrollare) > 0;
         }
     }
 }

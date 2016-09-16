@@ -22,21 +22,29 @@ namespace telecontrollo
 
             int numDev = Global.scheda.NumeroLineeIO;
             String j="";
-            for (int i = 0; i < numDev; i++)
+            for (int i =1; i <= numDev; i++)
             {
-                int banco = i / 8;
-
-                bool stato = linee[banco];
+                bool stato = Global.scheda.statolinea(i, linee);
                 HtmlGenericControl div = new HtmlGenericControl("div");
                 div.InnerText = "Linea " + i.ToString();
                 div.Attributes.Add("class", "col-md-4");
                 Button btn = new Button();
-                btn.ID="btn"+i.ToString();
-                btn.Attributes.Add("class", "btn btn-success");
-                btn.CommandName=btn.ID;
-                btn.Text = "Accendi linea " + i.ToString();
-                btn.UseSubmitBehavior=true;
+                btn.ID = "btn" + i.ToString();
+                btn.CommandName = btn.ID;
+                btn.UseSubmitBehavior = true;
                 btn.Click += new EventHandler(bt1_Click);
+                if (stato == true)
+                {
+                    btn.Attributes.Add("class", "btn btn-info");
+                    btn.Text = "Spegni linea " + i.ToString();
+
+                }
+                else
+                {
+                    btn.Attributes.Add("class", "btn btn-success");
+                    btn.Text = "Accendi linea " + i.ToString();
+
+                }
                 div.Controls.Add(btn);
                 form1.Controls.Add(div);
             }
