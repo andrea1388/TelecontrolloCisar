@@ -8,6 +8,7 @@ using Raspberry.IO.Components.Expanders.Pcf8574;
 using Raspberry.IO.GeneralPurpose;
 using Raspberry.IO.InterIntegratedCircuit;
 
+
 /*
     Attende comandi dtmf
     Formato comando
@@ -52,6 +53,7 @@ namespace telecontrollo
         Pcf scheda;
         bool lineaconnessa = false; // indica se la linea è agganciata
         String parametriE2speak;
+        private static AutoResetEvent semaforoCodaAzioni = new AutoResetEvent(false);
 
         public void mainloop(String path2conffile)
         {
@@ -76,6 +78,7 @@ namespace telecontrollo
             int tempominimoduratasquillo = 250; // tempo minimo durata dello squillo prima di considerarlo valido, in ms
             int tempomassimochiamata = 6000; // tempo max durata telefonata
             bool statoPrecedenteTonoDiponibile = false;
+
 
             log("Server telecontrollo - By iw3gcb - luglio 2016");
             log("File di configurazione=" + path2conffile);
@@ -313,6 +316,22 @@ namespace telecontrollo
             DateTime t = DateTime.Now;
             String dt = t.ToString("d/M/y HH:mm:ss:FFF ");
             Console.WriteLine(dt + msg);
+        }
+        void ElaboratoreCodaAzioni()
+        {
+            while(true)
+            {
+                semaforoCodaAzioni.WaitOne();
+                while(true)
+                {
+                    azione = azioniii.prendi();
+                    if(azione == nothing) break;
+                    ElaboraAzione();
+                }
+
+            }
+
+
         }
     }
     }
