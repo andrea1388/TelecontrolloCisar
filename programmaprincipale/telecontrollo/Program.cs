@@ -1,5 +1,4 @@
-﻿//#define Debug
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
@@ -19,10 +18,12 @@ using Raspberry.IO.InterIntegratedCircuit;
 
 namespace telecontrollo
 {
+    enum tipoComando { on,off,onoff,offon};
     class Program
     {
         static void Main(string[] args)
         {
+           
             main m = new main();
             if (args.Length == 1) m.mainloop(args[0]); else m.mainloop("telecontrollo.conf");
             //try
@@ -53,7 +54,7 @@ namespace telecontrollo
         Pcf scheda;
         bool lineaconnessa = false; // indica se la linea è agganciata
         String parametriE2speak;
-        private static AutoResetEvent semaforoCodaAzioni = new AutoResetEvent(false);
+        Semaphore sem = new Semaphore(1, 1);
 
         public void mainloop(String path2conffile)
         {
@@ -102,13 +103,15 @@ namespace telecontrollo
             log("tempomassimochiamata=" + tempomassimochiamata.ToString());
             log("parametriE2speak=" + parametriE2speak);
             log("Server telecontrollo partito");
-
+            #if DEBUG
+            log("DEBUG version - Not workin' !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+            #endif
             Stopwatch tempochiamata = new Stopwatch();
             
             // definizione pin i/o
             // pin da leggere con una sola lettura contemporanea
             // 17= tonodisponibile, 21=bit0 tono, 22=bit1, 23= bit3, 24=bit3, 25=squillo
-            #if !Debug
+            #if !DEBUG
             pins = ProcessorPins.Pin17 | ProcessorPins.Pin21 | ProcessorPins.Pin22 | ProcessorPins.Pin23 | ProcessorPins.Pin24 | ProcessorPins.Pin25;
             driver = GpioConnectionSettings.DefaultDriver;
             driver.Allocate(pinAggangioLinea, PinDirection.Output);
@@ -119,7 +122,7 @@ namespace telecontrollo
             driver.Allocate(ProcessorPin.Pin23, PinDirection.Input);
             driver.Allocate(ProcessorPin.Pin24, PinDirection.Input);
             driver.Allocate(ProcessorPin.Pin25, PinDirection.Input);
-#endif
+            #endif
             SganciaLineaTelefonica();
             SgancioPTT();
             while (true)
@@ -167,7 +170,7 @@ namespace telecontrollo
         }
         void leggiingressi(out bool tonodisponibile, out bool squillotelefono, out TonoDtmf tono)
         {
-            #if !Debug
+            #if !DEBUG
             lettura = driver.Read(pins);
             tonodisponibile = (lettura & ProcessorPins.Pin17)>0;
             squillotelefono = (lettura & ProcessorPins.Pin25)==0; // è attivo basso
@@ -183,37 +186,36 @@ namespace telecontrollo
             tono = new TonoDtmf(t);
             tonodisponibile = true;
             squillotelefono = false;
-#endif
+            #endif
 
         }
         void AgganciaLineaTelefonica()
         {
-            #if !Debug
+            #if !DEBUG
             driver.Write(pinAggangioLinea, true);
-            log("Linea telefonica agganciata");
             #endif
+            log("Linea telefonica agganciata");
         }
         void SganciaLineaTelefonica()
         {
-            #if !Debug
+            #if !DEBUG
             driver.Write(pinAggangioLinea, false);
-            log("Linea telefonica sganciata");
             #endif
-
+            log("Linea telefonica sganciata");
         }
         void AggancioPTT()
         {
-            #if !Debug
+            #if !DEBUG
             driver.Write(pinAggangioPTT, true);
-            log("PTT agganciato");
             #endif
+            log("PTT agganciato");
         }
         void SgancioPTT()
         {
-            #if !Debug
+            #if !DEBUG
             driver.Write(pinAggangioPTT, false);
-            log("PTT sganciato");
             #endif
+            log("PTT sganciato");
         }
         void ElaboraSequenzaToniRicevuti(TonoDtmf tono)
         {
@@ -272,23 +274,28 @@ namespace telecontrollo
                 log("ComandoRicevuto:Numero linea errata:" + linea);
                 return;
             }
-            #if !Debug
-            bool ok;
+            bool ok=true;
+            Thread newThread = new Thread(this.Azione);
+            CComando cmd=new CComando();
+            cmd.linea = linea;
             switch (comando)
             {
                 case '0': //spegni
-                    ok=scheda.SpegniLinea(linea);
+                    cmd.comando = tipoComando.off;
                     break;
                 case '1': //accendi
-                    ok=scheda.AccendiLinea(linea);
+                    cmd.comando = tipoComando.on;
                     break;
                 default:
                     ok = false;
                     break;
+
             }
+                    
             String msg;
             if (ok)
             {
+                newThread.Start(cmd);
                 msg = "Linea_" + linea.ToString();
                 if (comando == '0') msg += "_spenta"; else msg += "_accesa";
             }
@@ -302,34 +309,60 @@ namespace telecontrollo
                 AggancioPTT();
                 Thread.Sleep(300);
             }
+            Parla(msg);
+            if (!lineaconnessa) SgancioPTT();
+        }
+        void Parla(String msg )
+        {
+            #if !DEBUG
             var info = new ProcessStartInfo();
             info.FileName="espeak";
             info.Arguments = msg + " " + parametriE2speak;
             Process p=Process.Start(info);
             p.WaitForExit();
-            if (!lineaconnessa) SgancioPTT();
             #endif
         }
-      
         static void log(String msg)
         {
             DateTime t = DateTime.Now;
             String dt = t.ToString("d/M/y HH:mm:ss:FFF ");
             Console.WriteLine(dt + msg);
         }
-        void ElaboratoreCodaAzioni()
+        public void Azione(object data)
         {
-            while(true)
+            CComando cmd = (CComando)data;
+            switch(cmd.comando )
             {
-                semaforoCodaAzioni.WaitOne();
-                while(true)
-                {
-                    azione = azioniii.prendi();
-                    if(azione == nothing) break;
-                    ElaboraAzione();
-                }
-
+                case tipoComando.on:
+                    sem.WaitOne();
+                    scheda.AccendiLinea(cmd.linea);
+                    sem.Release();
+                    break;
+                case tipoComando.off:
+                    sem.WaitOne();
+                    scheda.SpegniLinea (cmd.linea);
+                    sem.Release();
+                    break;
+                case tipoComando.offon:
+                    sem.WaitOne();
+                    scheda.SpegniLinea(cmd.linea);
+                    sem.Release();
+                    Thread.Sleep(cmd.timeout);
+                    sem.WaitOne();
+                    scheda.AccendiLinea (cmd.linea);
+                    sem.Release();
+                    break;
+                case tipoComando.onoff:
+                    sem.WaitOne();
+                    scheda.AccendiLinea(cmd.linea);
+                    sem.Release();
+                    Thread.Sleep(cmd.timeout);
+                    sem.WaitOne();
+                    scheda.SpegniLinea(cmd.linea);
+                    sem.Release();
+                    break;
             }
+            
 
 
         }

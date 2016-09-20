@@ -1,9 +1,8 @@
-﻿#define Debug
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-#if !Debug
+#if !DEBUG
 using Raspberry.IO.Components.Expanders.Pcf8574;
 using Raspberry.IO.GeneralPurpose;
 using Raspberry.IO.InterIntegratedCircuit;
@@ -12,7 +11,7 @@ namespace telecontrollo
 {
     public class Pcf
     {
-        #if !Debug
+        #if !DEBUG
         I2cDriver i2cdriver;
         Pcf8574I2cConnection[] conn;
         const ConnectorPin sdaPin = ConnectorPin.P1Pin03;
@@ -22,7 +21,7 @@ namespace telecontrollo
         public Pcf(String indirizzi_pcf)
         {
             String[] indirizzi = indirizzi_pcf.Split(',');
-             #if !Debug
+             #if !DEBUG
             i2cdriver = new I2cDriver(sdaPin.ToProcessor(), sclPin.ToProcessor());
             conn = new Pcf8574I2cConnection[indirizzi.Length]; 
             for (int ip = 0; ip < indirizzi.Length; ip++)
@@ -36,7 +35,7 @@ namespace telecontrollo
         { 
             get
             {
-#if !Debug
+#if !DEBUG
                 return conn.Length * 8;
 #else
                 return 16;
@@ -47,7 +46,7 @@ namespace telecontrollo
         {
             get
             {
-     #if !Debug
+     #if !DEBUG
                 return conn.Length;
 #else
                 return 2;
@@ -58,7 +57,7 @@ namespace telecontrollo
         {
             get
             {
-#if !Debug
+#if !DEBUG
                 return (ushort)i2cdriver.ClockDivider;
 #else
                 return 1;
@@ -66,7 +65,7 @@ namespace telecontrollo
             }
             set
             {
-                #if !Debug
+                #if !DEBUG
                 i2cdriver.ClockDivider=value ;
 #endif
             }
@@ -81,7 +80,7 @@ namespace telecontrollo
         }
         public UInt16[] LeggiLinee()
         {
-#if !Debug
+#if !DEBUG
             UInt16[] ret = new UInt16[conn.Length];
             for (int pcf = 0; pcf < conn.Length; pcf++)
             {
@@ -114,7 +113,7 @@ namespace telecontrollo
         // internal
         private bool _accendispegnilinea(int numero, bool on)
         {
-#if !Debug
+#if !DEBUG
             int tentativi = 0;
             Pcf8574Pin bitdacontrollare = (Pcf8574Pin)(Math.Pow(2, ((numero - 1) % 8)));
             var deviceConnection = conn[(numero - 1) / 8];
