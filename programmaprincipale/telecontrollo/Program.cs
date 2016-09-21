@@ -21,10 +21,10 @@ namespace telecontrollo
     enum tipoComando { on,off,onoff,offon};
     class Program
     {
+        public static main m;
         static void Main(string[] args)
         {
-           
-            main m = new main();
+            m = new main();
             if (args.Length == 1) m.mainloop(args[0]); else m.mainloop("telecontrollo.conf");
             //try
             {
@@ -33,10 +33,17 @@ namespace telecontrollo
             //catch (Exception e)
             {
 
-                //log("Errore " + e.Message );
+                //Program.log("Errore " + e.Message );
             }
-
+       
         }
+        public static void log(String msg)
+        {
+            DateTime t = DateTime.Now;
+            String dt = t.ToString("d/M/y HH:mm:ss:FFF ");
+            Console.WriteLine(dt + msg);
+        }
+    }
        
     class main
     {
@@ -51,7 +58,7 @@ namespace telecontrollo
         IGpioConnectionDriver  driver;
         const ProcessorPin pinAggangioLinea=ProcessorPin.Pin10;
         const ProcessorPin pinAggangioPTT = ProcessorPin.Pin18;
-        Pcf scheda;
+        public Pcf scheda;
         bool lineaconnessa = false; // indica se la linea è agganciata
         String parametriE2speak;
         Semaphore sem = new Semaphore(1, 1);
@@ -68,7 +75,7 @@ namespace telecontrollo
             catch (Exception e)
             {
 
-                log("Errore " + e.Message );
+                Program.log("Errore " + e.Message);
                 return;
             }
             
@@ -79,10 +86,12 @@ namespace telecontrollo
             int tempominimoduratasquillo = 250; // tempo minimo durata dello squillo prima di considerarlo valido, in ms
             int tempomassimochiamata = 6000; // tempo max durata telefonata
             bool statoPrecedenteTonoDiponibile = false;
+            NetReceiver listener = new NetReceiver();
+            Thread thListener = new Thread(listener.StartListener );
+            thListener.Start();
 
-
-            log("Server telecontrollo - By iw3gcb - luglio 2016");
-            log("File di configurazione=" + path2conffile);
+            Program.log("Server telecontrollo - By iw3gcb - luglio 2016");
+            Program.log("File di configurazione=" + path2conffile);
             // carica impostazioni
             if(!int.TryParse(parser.GetSetting("ROOT", "intervallopolling"),out intervallopolling)) intervallopolling=10;
             if (!int.TryParse(parser.GetSetting("ROOT", "tempomassimochiamata"), out tempomassimochiamata)) tempomassimochiamata = 30000;
@@ -90,21 +99,21 @@ namespace telecontrollo
             if(tmp==null) tmp = "1968*";
             codicedtmf=new CodiceDtmf(tmp);
             buffer = new BufferCircolare((byte)(codicedtmf.Length+10));
-            //log("codicedtmf=" + codicedtmf.ToString() );
+            //Program.log("codicedtmf=" + codicedtmf.ToString() );
             tmp = parser.GetSetting("ROOT", "indirizziPcf");
-            log("indirizzi pcf=" + tmp);
+            Program.log("indirizzi pcf=" + tmp);
             scheda = new Pcf(tmp);
             parametriE2speak = parser.GetSetting("ROOT", "parametriE2speak");
             if (parametriE2speak == null) parametriE2speak = "-v it -p 70 -s 155 2>/dev/null";
             if (!ushort.TryParse(parser.GetSetting("ROOT", "I2cClockDiv"), out I2cClockDiv)) I2cClockDiv = 2500;
             scheda.i2cClockDiv = I2cClockDiv;
-            log("I2cClockDiv: " + scheda.i2cClockDiv.ToString());
-            log("intervallopolling=" + intervallopolling);
-            log("tempomassimochiamata=" + tempomassimochiamata.ToString());
-            log("parametriE2speak=" + parametriE2speak);
-            log("Server telecontrollo partito");
+            Program.log("I2cClockDiv: " + scheda.i2cClockDiv.ToString());
+            Program.log("intervallopolling=" + intervallopolling);
+            Program.log("tempomassimochiamata=" + tempomassimochiamata.ToString());
+            Program.log("parametriE2speak=" + parametriE2speak);
+            Program.log("Server telecontrollo partito");
             #if DEBUG
-            log("DEBUG version - Not workin' !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+            Program.log("DEBUG version - Not workin' !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
             #endif
             Stopwatch tempochiamata = new Stopwatch();
             
@@ -133,7 +142,7 @@ namespace telecontrollo
                     if (tonodisponibile && !statoPrecedenteTonoDiponibile)
                     {
                         statoPrecedenteTonoDiponibile = true;
-                        log("ricevuto tono: " + tono.Carattere);
+                        Program.log("ricevuto tono: " + tono.Carattere);
                         ElaboraSequenzaToniRicevuti(tono);
                         if (lineaconnessa) tempochiamata.Restart();
                     }
@@ -150,7 +159,7 @@ namespace telecontrollo
                         AgganciaLineaTelefonica();
                         tempochiamata.Restart();
                         duratasquillo = 0;
-                        log("linea agganciata");
+                        Program.log("linea agganciata");
                     }
                 }
                 if (lineaconnessa)
@@ -160,7 +169,7 @@ namespace telecontrollo
                         SganciaLineaTelefonica();
                         tempochiamata.Stop();
                         lineaconnessa = false;
-                        log("linea sganciata per limite temporale");
+                        Program.log("linea sganciata per limite temporale");
                     }
                 }
                 Thread.Sleep(intervallopolling);
@@ -194,28 +203,28 @@ namespace telecontrollo
             #if !DEBUG
             driver.Write(pinAggangioLinea, true);
             #endif
-            log("Linea telefonica agganciata");
+            Program.log("Linea telefonica agganciata");
         }
         void SganciaLineaTelefonica()
         {
             #if !DEBUG
             driver.Write(pinAggangioLinea, false);
             #endif
-            log("Linea telefonica sganciata");
+            Program.log("Linea telefonica sganciata");
         }
         void AggancioPTT()
         {
             #if !DEBUG
             driver.Write(pinAggangioPTT, true);
             #endif
-            log("PTT agganciato");
+            Program.log("PTT agganciato");
         }
         void SgancioPTT()
         {
             #if !DEBUG
             driver.Write(pinAggangioPTT, false);
             #endif
-            log("PTT sganciato");
+            Program.log("PTT sganciato");
         }
         void ElaboraSequenzaToniRicevuti(TonoDtmf tono)
         {
@@ -227,7 +236,7 @@ namespace telecontrollo
                     byte[] array = buffer.EstraiUltimiDati((byte) codicedtmf.Length);
                     if (codicedtmf.Confronta(array))
                     {
-                        log("stato1:codice corrisponde");
+                        Program.log("stato1:codice corrisponde");
                         stato = 1;
                         duratacomandodtmf.Restart();
                     }
@@ -236,23 +245,23 @@ namespace telecontrollo
                     comando=tono.Carattere;
                     if(comando!='0' && comando !='1')
                     {
-                        log("comando errato: " + comando);
+                        Program.log("comando errato: " + comando);
                         stato = 0;
                     }
                     else
                     {
-                        log("stato2:comando=" + comando);
+                        Program.log("stato2:comando=" + comando);
                         stato = 2;
                     }
                     break;
                 case 2: // numero di linea (decine)
                     linea=tono.Carattere.ToString();
-                    log("stato3");
+                    Program.log("stato3");
                     stato=3;
                     break;
                 case 3: // numero di linea (unità)
                     linea += tono.Carattere.ToString();
-                    log("comando completato:linea=" + linea);
+                    Program.log("comando completato:linea=" + linea);
                     ComandoRicevuto(comando,linea);
                     stato=0;
                     
@@ -266,12 +275,12 @@ namespace telecontrollo
             int linea;
             if(!int.TryParse(l,out linea))
             {
-                log("ComandoRicevuto:Numero linea errata:" + l);
+                Program.log("ComandoRicevuto:Numero linea errata:" + l);
                 return;
             }
             if (linea < 1 || linea > scheda.NumeroLineeIO )
             {
-                log("ComandoRicevuto:Numero linea errata:" + linea);
+                Program.log("ComandoRicevuto:Numero linea errata:" + linea);
                 return;
             }
             bool ok=true;
@@ -322,12 +331,7 @@ namespace telecontrollo
             p.WaitForExit();
             #endif
         }
-        static void log(String msg)
-        {
-            DateTime t = DateTime.Now;
-            String dt = t.ToString("d/M/y HH:mm:ss:FFF ");
-            Console.WriteLine(dt + msg);
-        }
+
         public void Azione(object data)
         {
             CComando cmd = (CComando)data;
@@ -336,11 +340,13 @@ namespace telecontrollo
                 case tipoComando.on:
                     sem.WaitOne();
                     scheda.AccendiLinea(cmd.linea);
+                    Program.log("linea " + cmd.linea.ToString() + " accesa");
                     sem.Release();
                     break;
                 case tipoComando.off:
                     sem.WaitOne();
                     scheda.SpegniLinea (cmd.linea);
+                    Program.log("linea " + cmd.linea.ToString() + " spenta");
                     sem.Release();
                     break;
                 case tipoComando.offon:
@@ -368,4 +374,4 @@ namespace telecontrollo
         }
     }
     }
-}
+
