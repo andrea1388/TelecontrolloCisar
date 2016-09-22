@@ -13,20 +13,59 @@ namespace telecontrollo
         String Elabora(String cmd)
         {
             String[] param = cmd.Split(' ');
-            int linea;
+            int linea,timeout;
             int linee = Program.m.scheda.NumeroLineeIO;
-            if (param.Length < 2) return "comando errato";
-            if (!int.TryParse(param[0], out linea)) return "linea errata";
-            if (linea < 1 || linea > linee) return "linea errata";
-            switch (param[1].ToLower())
+            if (param.Length < 1 || param.Length > 3) return "comando errato";
+            Thread newThread = new Thread(Program.m.Azione);
+            CComando thcmd = new CComando();
+            thcmd.timeout = 1;
+            switch (param[0].ToLower())
             {
                 case "on":
-                    Thread newThread = new Thread(Program.m.Azione);
-                    CComando thcmd=new CComando();
+                    if (param.Length != 2) return "comando errato";
+                    if (!int.TryParse(param[1], out linea)) return "linea errata";
+                    if (linea < 1 || linea > linee) return "linea errata";
                     thcmd.linea = linea;
                     thcmd.comando = tipoComando.on;
                     newThread.Start(thcmd);
                     return "ok";
+                case "off":
+                    if (param.Length != 2) return "comando errato";
+                    if (!int.TryParse(param[1], out linea)) return "linea errata";
+                    if (linea < 1 || linea > linee) return "linea errata";
+                    thcmd.linea = linea;
+                    thcmd.comando = tipoComando.off;
+                    newThread.Start(thcmd);
+                    return "ok";
+                case "offon":
+                    if (!int.TryParse(param[1], out linea)) return "linea errata";
+                    if (linea < 1 || linea > linee) return "linea errata";
+                    if (param.Length == 3)
+                    {
+                        if (!int.TryParse(param[2], out timeout)) return "timeout errato";
+                        if (timeout < 1 || timeout > 999) return "timeout errato";
+                        thcmd.timeout = timeout;
+                    }
+                    thcmd.linea = linea;
+                    thcmd.comando = tipoComando.offon;
+                    newThread.Start(thcmd);
+                    return "ok";
+                case "onoff":
+                    if (!int.TryParse(param[1], out linea)) return "linea errata";
+                    if (linea < 1 || linea > linee) return "linea errata";
+                    if (param.Length == 3)
+                    {
+                        if (!int.TryParse(param[2], out timeout)) return "timeout errato";
+                        if (timeout < 1 || timeout > 999) return "timeout errato";
+                        thcmd.timeout = timeout;
+                    }
+                    thcmd.linea = linea;
+                    thcmd.comando = tipoComando.onoff;
+                    newThread.Start(thcmd);
+                    return "ok";
+                case "stato":
+                    if (param.Length != 1) return "comando errato";
+                    return Program.m.scheda.LeggiLineeHEX();
                 default:
                     return "Comando non valido";
             }

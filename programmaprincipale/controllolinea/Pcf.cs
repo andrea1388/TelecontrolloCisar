@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 #if !DEBUG
 using Raspberry.IO.Components.Expanders.Pcf8574;
 using Raspberry.IO.GeneralPurpose;
@@ -11,6 +12,7 @@ namespace telecontrollo
 {
     public class Pcf
     {
+        Semaphore sem = new Semaphore(1, 1);
         #if !DEBUG
         I2cDriver i2cdriver;
         Pcf8574I2cConnection[] conn;
@@ -110,10 +112,21 @@ namespace telecontrollo
             
             return ret;
         }
+        public String LeggiLineeHEX()
+        {
+            UInt16[] stato = LeggiLinee();
+            String ret="";
+            for (int i = NumeroPcf - 1; i > -1; i--)
+            {
+                if (stato[i] >= 0x100) ret=ret+"--"; else ret=ret+stato[i].ToString("X2");
+            }
+            return ret;
+        }
         // internal
         private bool _accendispegnilinea(int numero, bool on)
         {
-#if !DEBUG
+            sem.WaitOne();
+            #if !DEBUG
             int tentativi = 0;
             Pcf8574Pin bitdacontrollare = (Pcf8574Pin)(Math.Pow(2, ((numero - 1) % 8)));
             var deviceConnection = conn[(numero - 1) / 8];
@@ -130,10 +143,11 @@ namespace telecontrollo
                     System.Threading.Thread.Sleep(1);
                 }
             }
-            return false;
-#else
+            #endif
+            Program.log("linea " + numero.ToString() +  (on ? " accesa" : " spenta"));
+            sem.Release();
             return true;
-#endif
+
         }
         public bool statolinea(int linea , ushort[] stati)
         {

@@ -13,6 +13,10 @@ using Raspberry.IO.InterIntegratedCircuit;
     Formato comando
     <codice di sblocco><comando: 0 | 1><linea da 00 a 99 sempre su due cifre>
     0 spegne 1 accende
+    comandi via rete
+    <on|off|offfon|onoff><linea>
+    <offfon|onoff><linea>[<timeout>=1]
+    <stato>
 */
 
 
@@ -61,7 +65,6 @@ namespace telecontrollo
         public Pcf scheda;
         bool lineaconnessa = false; // indica se la linea è agganciata
         String parametriE2speak;
-        Semaphore sem = new Semaphore(1, 1);
 
         public void mainloop(String path2conffile)
         {
@@ -338,34 +341,20 @@ namespace telecontrollo
             switch(cmd.comando )
             {
                 case tipoComando.on:
-                    sem.WaitOne();
                     scheda.AccendiLinea(cmd.linea);
-                    Program.log("linea " + cmd.linea.ToString() + " accesa");
-                    sem.Release();
                     break;
                 case tipoComando.off:
-                    sem.WaitOne();
                     scheda.SpegniLinea (cmd.linea);
-                    Program.log("linea " + cmd.linea.ToString() + " spenta");
-                    sem.Release();
                     break;
                 case tipoComando.offon:
-                    sem.WaitOne();
                     scheda.SpegniLinea(cmd.linea);
-                    sem.Release();
-                    Thread.Sleep(cmd.timeout);
-                    sem.WaitOne();
+                    Thread.Sleep(cmd.timeout*1000);
                     scheda.AccendiLinea (cmd.linea);
-                    sem.Release();
                     break;
                 case tipoComando.onoff:
-                    sem.WaitOne();
                     scheda.AccendiLinea(cmd.linea);
-                    sem.Release();
-                    Thread.Sleep(cmd.timeout);
-                    sem.WaitOne();
+                    Thread.Sleep(cmd.timeout*1000);
                     scheda.SpegniLinea(cmd.linea);
-                    sem.Release();
                     break;
             }
             
