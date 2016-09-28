@@ -18,6 +18,8 @@ namespace telecontrollo
         Pcf8574I2cConnection[] conn;
         const ConnectorPin sdaPin = ConnectorPin.P1Pin03;
         const ConnectorPin sclPin = ConnectorPin.P1Pin05;
+        #else
+        UInt16[] statolineadubug = new UInt16[2];
         #endif
 
         public Pcf(String indirizzi_pcf)
@@ -103,14 +105,14 @@ namespace telecontrollo
                     }
                 }
             }
+            return ret;
 #else
-            UInt16[] ret = new UInt16[2];
-            ret[0] = 0xaa;
-            ret[1] = 0x99;
 
+          
+            return statolineadubug;
 #endif
             
-            return ret;
+            
         }
         public String LeggiLineeHEX()
         {
@@ -143,6 +145,14 @@ namespace telecontrollo
                     System.Threading.Thread.Sleep(1);
                 }
             }
+            #else
+            int banco = (numero - 1) / 8;
+            UInt16 bit = (UInt16)Math.Pow(2, ((numero - 1) % 8));
+            //Program.log("banco: " + banco.ToString() + " bit: ");
+            if (on) 
+                   statolineadubug[banco] = (ushort)(statolineadubug[banco] | bit);
+            else
+                statolineadubug[banco] = (ushort)(statolineadubug[banco] ^ bit);
             #endif
             Program.log("linea " + numero.ToString() +  (on ? " accesa" : " spenta"));
             sem.Release();
