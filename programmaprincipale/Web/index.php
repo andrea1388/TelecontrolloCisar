@@ -16,6 +16,24 @@
     <title>Telecontrollo Cisar</title>
     <link href="css/bootstrap.min.css" rel="stylesheet">
     <link href="grid.css" rel="stylesheet">
+	  <script>
+function refresh() {
+        var xmlhttp = new XMLHttpRequest();
+        xmlhttp.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+		    var valore=this.responseText;
+		    var stato=parseInt("0x"+ valore);
+		    var numerolinee= 4*valore.length; 
+		    for(i=0;i<numerolinee;i++)
+		    {
+		    }
+                	$("#tablerow").append(html);
+            }
+        };
+        xmlhttp.open("GET", "gethint.php?q=" + str, true);
+        xmlhttp.send();
+}
+	</script>
   </head>
 <?php
 	 exec("/usr/telecontrollo/cl stato" ,$op, $ret);
