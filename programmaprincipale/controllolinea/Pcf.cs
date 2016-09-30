@@ -127,6 +127,7 @@ namespace telecontrollo
         // internal
         private bool _accendispegnilinea(int numero, bool on)
         {
+            bool ok=false ;
             sem.WaitOne();
             #if !DEBUG
             int tentativi = 0;
@@ -137,12 +138,13 @@ namespace telecontrollo
                 try
                 {
                     deviceConnection.SetPinStatus(bitdacontrollare, on);
-                    return true;
+                    ok = true;
                 }
                 catch (Exception e)
                 {
                     Console.WriteLine("Errore SetPinStatus: tentativo {0} - {1}", tentativi, e.Message);
                     System.Threading.Thread.Sleep(1);
+                    ok= false;
                 }
             }
             #else
@@ -153,10 +155,11 @@ namespace telecontrollo
                    statolineadubug[banco] = (ushort)(statolineadubug[banco] | bit);
             else
                 statolineadubug[banco] = (ushort)(statolineadubug[banco] ^ bit);
+            ok = true;
             #endif
             Program.log("linea " + numero.ToString() +  (on ? " accesa" : " spenta"));
             sem.Release();
-            return true;
+            return ok;
 
         }
         public bool statolinea(int linea , ushort[] stati)
