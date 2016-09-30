@@ -29,6 +29,7 @@
 	  {
 	      $ret[$i]=0;
 	      if($stato & pow(2,$i)) $ret[$i]=1;
+        //echo $ret[$i]. "<br>";
 	  }
 	  return $ret;
 	 }
@@ -37,21 +38,26 @@
     <div class="container">
 
       <div class="page-header">
-        <h1>Bootstrap grid examples</h1>
-        <p class="lead">Basic grid layouts to get you familiar with building within the Bootstrap grid system.</p>
+        <h1>Telecontrollo Cisar</h1>
+        <p class="lead">Controllo remoto delle uscite</p>
       </div>
 
-      <h3>Three equal columns</h3>
-      <p>Get three equal-width columns <strong>starting at desktops and scaling to large desktops</strong>. On mobile devices, tablets and below, the columns will automatically stack.</p>
+      <h3>Stato linee</h3>
+      <p>Premere il pulsante per esercitare la funzione corrispondente</p>
       <div class="row">
 	  <?php
 	  for($i=0;$i<$numerolinee;$i++) {
 	  								
 	  ?>
     <div class="col-md-3">
-		<div class="alert alert-success" role="alert">Linea <?php echo $i +1; ?></div>
-		<button type="button" class="btn btn-primary">Accendi</button>
+		<div class="alert alert-success" role="alert">Linea <?php echo ($i +1); ?></div>
+    <?php if($Statolinea[$i]==0) : ?>
+		<button type="button" class="btn btn-success">Accendi</button>
 		<button type="button" class="btn btn-primary">Flash</button>
+    <?php else : ?>
+		<button type="button" class="btn btn-danger">Spegni</button>
+		<button type="button" class="btn btn-primary">Flash</button>
+    <?php endif; ?>
 		</div>
 	<?php
 		 }
