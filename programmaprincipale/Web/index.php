@@ -16,23 +16,48 @@
     <title>Telecontrollo Cisar</title>
     <link href="css/bootstrap.min.css" rel="stylesheet">
     <link href="grid.css" rel="stylesheet">
-	  <script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
+
+	<script>
+		var myVar = setInterval(refresh, 1000);
 function refresh() {
         var xmlhttp = new XMLHttpRequest();
-        xmlhttp.onreadystatechange = function() {
-            if (this.readyState == 4 && this.status == 200) {
-		    var valore=this.responseText;
-		    var stato=parseInt("0x"+ valore);
-		    var numerolinee= 4*valore.length; 
-		    for(i=0;i<numerolinee;i++)
-		    {
-		    }
-                	$("#tablerow").append(html);
+        xmlhttp.onreadystatechange = function() 
+        {
+            if (this.readyState == 4 && this.status == 200) 
+            {
+		    	var valore=this.responseText;
+		    	var stato=parseInt("0x"+ valore);
+		    	var numerolinee= 4*valore.length; 
+		    	$("#tonto").text(stato + " " + numerolinee);
+		    	for(i=0;i<numerolinee;i++)
+		    	{
+		    		var l=i+1;
+		    		if ((stato & Math.pow(2, i)) >0 )
+		    		{
+		    			$("#jj" +i).text("Spegni");
+						$("#jj" +i).attr('class', 'btn btn-danger btn-lg btn-block');
+						$("#jj" +i).click(function() {$( this ).set(l,"off");});
+		    		}
+		    		else
+		    		{
+		    			$("#jj" +i).text("Accendi");
+						$("#jj" +i).attr('class', 'btn btn-success btn-lg btn-block');		    
+						$("#jj" +i).click(function() {$( this ).set(l,"on");});
+					}
+		    		
+            		}
             }
-        };
-        xmlhttp.open("GET", "gethint.php?q=" + str, true);
+        }
+        xmlhttp.open("GET", "stato.php", true);
         xmlhttp.send();
 }
+function set(linea,stato) {
+        var xmlhttp = new XMLHttpRequest();
+        xmlhttp.open("GET", "set.php?linea=" +linea+ "&stato="+stato, true);
+        xmlhttp.send();
+}
+
 	</script>
   </head>
 <?php
@@ -53,6 +78,7 @@ function refresh() {
 	 }
 ?>
   <body>
+  <form action="index.php" method="get">
     <div class="container">
 
       <div class="page-header">
@@ -65,17 +91,11 @@ function refresh() {
       <div class="row">
 	  <?php
 	  for($i=0;$i<$numerolinee;$i++) {
-	  								
+	  	$l=$i+1;
 	  ?>
-    <div class="col-md-3">
-		<div class="alert alert-success" role="alert">Linea <?php echo ($i +1); ?></div>
-    <?php if($Statolinea[$i]==0) : ?>
-		<button type="button" class="btn btn-success">Accendi</button>
-		<button type="button" class="btn btn-primary">Flash</button>
-    <?php else : ?>
-		<button type="button" class="btn btn-danger">Spegni</button>
-		<button type="button" class="btn btn-primary">Flash</button>
-    <?php endif; ?>
+    	<div class="col-md-3" align="center">
+    	<strong>Linea <?php echo $l; ?></strong>
+    	<button type="button" id="jj<?php echo $i; ?>" class="btn btn-default btn-lg btn-block">...</button>
 		</div>
 	<?php
 		 }
@@ -84,5 +104,6 @@ function refresh() {
 
      
     </div> <!-- /container -->
+    </form>
   </body>
 </html>
