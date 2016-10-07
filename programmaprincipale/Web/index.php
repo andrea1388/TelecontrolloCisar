@@ -1,7 +1,8 @@
 <?php
-  //if (!isset($_SESSION['user'])) {
-  //  header('Location: login.php');
-//}
+	session_start();
+  	if (!isset($_SESSION['user'])) 
+		header('Location: login.php');
+	$linee = array("Link Nazionale", "Boh", "Bah");
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -35,16 +36,21 @@ function refresh() {
 		    		var l=i+1;
 		    		if ((stato & Math.pow(2, i)) >0 )
 		    		{
+		    			// la linea è accesa
 		    			$("#jj" +i).text("Spegni");
-						$("#jj" +i).attr('class', 'btn btn-danger btn-lg btn-block');
-						$("#jj" +i).click(function() {$( this ).set(l,"off");});
+						$("#jj" +i).attr('class', 'btn btn-danger');
+						$("#jj" +i).attr("onclick","set("+l+",\"off\")");
+						$("#kk" +i).attr("onclick","flash("+l+",4,0)");
+						$("#ll" +i).attr("onclick","flash("+l+",60,0)");
 		    		}
 		    		else
 		    		{
 		    			$("#jj" +i).text("Accendi");
-						$("#jj" +i).attr('class', 'btn btn-success btn-lg btn-block');		    
-						$("#jj" +i).click(function() {$( this ).set(l,"on");});
-					}
+						$("#jj" +i).attr('class', 'btn btn-success');		    
+						$("#jj" +i).attr("onclick","set("+l+",\"on\")");
+						$("#kk" +i).attr("onclick","flash("+l+",4,1)");
+						$("#ll" +i).attr("onclick","flash("+l+",60,1)");
+						}
 		    		
             		}
             }
@@ -56,6 +62,13 @@ function set(linea,stato) {
         var xmlhttp = new XMLHttpRequest();
         xmlhttp.open("GET", "set.php?linea=" +linea+ "&stato="+stato, true);
         xmlhttp.send();
+        setTimeout(refresh,50);
+}
+function flash(linea,tempo,stato) {
+        var xmlhttp = new XMLHttpRequest();
+        xmlhttp.open("GET", "flash.php?linea=" +linea+ "&tempo="+tempo+"&stato="+stato, true);
+        xmlhttp.send();
+        setTimeout(refresh,50);
 }
 
 	</script>
@@ -93,9 +106,11 @@ function set(linea,stato) {
 	  for($i=0;$i<$numerolinee;$i++) {
 	  	$l=$i+1;
 	  ?>
-    	<div class="col-md-3" align="center">
-    	<strong>Linea <?php echo $l; ?></strong>
-    	<button type="button" id="jj<?php echo $i; ?>" class="btn btn-default btn-lg btn-block">...</button>
+    	<div class="col-md-6" align="center">
+    	<strong>Linea <?php echo "$l ($linee[$i])"; ?></strong><br>
+    	<button type="button" id="jj<?php echo $i; ?>" class="btn btn-default" onclick="">...</button>
+    	<button type="button" id="kk<?php echo $i; ?>" class="btn btn-info" onclick="">Flash 4s</button>
+    	<button type="button" id="ll<?php echo $i; ?>" class="btn btn-info" onclick="">Flash 60s</button>
 		</div>
 	<?php
 		 }
