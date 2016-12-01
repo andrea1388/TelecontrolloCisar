@@ -81,11 +81,15 @@ namespace telecontrollo
             {
                 while (!done)
                 {
+                    #if DEBUG
                     Program.log ("Waiting for broadcast 2");
+                    #endif
                     byte[] bytes = listener.Receive(ref groupEP);
                     String s = Encoding.ASCII.GetString(bytes, 0, bytes.Length);
+                    #if DEBUG
                     String lg = string.Format("Received broadcast from {0}: {1}", groupEP.ToString(), s);
                     Program.log(lg);
+                    #endif
                     String r = Elabora(s);
                     byte[] sendbuf = Encoding.ASCII.GetBytes(r);
                     listener.Send(sendbuf, sendbuf.Length, groupEP);
