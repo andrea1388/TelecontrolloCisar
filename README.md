@@ -52,3 +52,8 @@ ExecStart=/bin/mkdir /var/log/apache2
 
 [Install]
 WantedBy=multi-user.target
+
+
+raspbian stretch
+apt install php7.0
+apt install apache2 libapache2-mod-php7.0
